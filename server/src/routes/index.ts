@@ -3,6 +3,7 @@ import { Router } from "express";
 // Route Modules
 // import authRoutes from "./auth.routes";
 import userRoutes from "./user.routes.js";
+import companyRoutes from "./company.routes.js";
 // import profileRoutes from "./profile.routes";
 // import categoryRoutes from "./category.routes";
 // import subCategoryRoutes from "./subcategory.routes";
@@ -32,6 +33,7 @@ const router: Router = Router();
 /* ---------------------- User Routes ---------------------- */
 
 router.use("/users", userRoutes);
+router.use("/companies", companyRoutes);
 // router.use("/profile", profileRoutes);
 
 /* ---------------------- Item Routes ---------------------- */

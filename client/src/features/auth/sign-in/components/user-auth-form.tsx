@@ -1,13 +1,10 @@
-import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
-import { toast } from 'sonner'
-// import { IconFacebook, IconGithub } from '@/assets/brand-icons'
-import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { useLogin } from '@/hooks/use-login'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -21,9 +18,7 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
 const formSchema = z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email' : undefined),
-  }),
+  email: z.string().email({ message: 'Please enter a valid email' }),
   password: z
     .string()
     .min(1, 'Please enter your password')
@@ -32,6 +27,7 @@ const formSchema = z.object({
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
+  className?: string
 }
 
 export function UserAuthForm({
@@ -39,9 +35,7 @@ export function UserAuthForm({
   redirectTo,
   ...props
 }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
-  const { auth } = useAuthStore()
+  const { mutate: login, isPending: isLoading } = useLogin(redirectTo)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,41 +45,25 @@ export function UserAuthForm({
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-
-    toast.promise(sleep(2000), {
-      loading: 'Signing in...',
-      success: () => {
-        setIsLoading(false)
-
-        // Mock successful authentication with expiry computed at success time
-        const mockUser = {
-          accountNo: 'ACC001',
-          email: data.email,
-          role: ['user'],
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
-        }
-
-        // Set user and access token
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
-
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
-        navigate({ to: targetPath, replace: true })
-
-        return `Welcome back, ${data.email}!`
-      },
-      error: 'Error',
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    login({
+      email: values.email,
+      password: values.password,
     })
   }
+
+  // Optional: already logged in → redirect (can also be handled in route guard)
+  // React.useEffect(() => {
+  //   if (isAuthenticated && redirectTo) {
+  //     navigate({ to: redirectTo, replace: true });
+  //   }
+  // }, [isAuthenticated, navigate, redirectTo]);
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn('grid gap-3', className)}
+        className={cn('grid gap-4', className)}
         {...props}
       >
         <FormField
@@ -101,6 +79,7 @@ export function UserAuthForm({
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name='password'
@@ -108,40 +87,46 @@ export function UserAuthForm({
             <FormItem className='relative'>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput placeholder='••••••••' {...field} />
               </FormControl>
               <FormMessage />
               <Link
                 to='/forgot-password'
-                className='absolute end-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
+                className='absolute top-0 right-0 text-sm font-medium text-muted-foreground hover:opacity-80'
               >
                 Forgot password?
               </Link>
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={isLoading}>
-          {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
+
+        <Button type='submit' className='mt-2' disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          ) : (
+            <LogIn className='mr-2 h-4 w-4' />
+          )}
           Sign in
         </Button>
 
-        {/* <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
+        {/* Uncomment if you want social login later */}
+        {/* <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background px-2 text-muted-foreground'>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
               Or continue with
             </span>
           </div>
         </div>
 
-        <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconGithub className='h-4 w-4' /> GitHub
+        <div className="grid grid-cols-2 gap-4">
+          <Button variant="outline" disabled={isLoading}>
+            GitHub
           </Button>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconFacebook className='h-4 w-4' /> Facebook
+          <Button variant="outline" disabled={isLoading}>
+            Google
           </Button>
         </div> */}
       </form>
