@@ -27,28 +27,43 @@ type CompaniesQueryKey = readonly [
   CompaniesSearch,
 ]
 
+type CompaniesQueryResult = {
+  companies: Company[]
+  totalCount: number
+}
+
 function buildCompaniesParams(search: CompaniesSearch) {
   const params = new URLSearchParams()
   if (search.page) params.set('page', String(search.page))
   if (search.pageSize) params.set('limit', String(search.pageSize))
-  if (search.filter) params.set('filter[name]', search.filter)
+  if (search.filter) params.set('search', search.filter)
   if (search.leadStatus?.length)
-    search.leadStatus.forEach((s) => params.append('filter[leadStatus]', s))
+    search.leadStatus.forEach((s) => params.append('leadStatus', s))
   if (search.priority?.length)
-    search.priority.forEach((p) => params.append('filter[priority]', p))
+    search.priority.forEach((p) => params.append('priority', p))
   return params.toString()
 }
 
-async function fetchCompanies(search: CompaniesSearch) {
+async function fetchCompanies(
+  search: CompaniesSearch
+): Promise<CompaniesQueryResult> {
   const query = buildCompaniesParams(search)
   const { data } = await api.get<CompaniesListResponse>(
     `/companies${query ? `?${query}` : ''}`
   )
-  return data.data.companies
+  return {
+    companies: data.data.companies,
+    totalCount: data.totalCount,
+  }
 }
 
 export function companiesQueryOptions(search: CompaniesSearch): Omit<
-  QueryOptions<Company[], Error, Company[], CompaniesQueryKey>,
+  QueryOptions<
+    CompaniesQueryResult,
+    Error,
+    CompaniesQueryResult,
+    CompaniesQueryKey
+  >,
   'queryKey'
 > & {
   queryKey: CompaniesQueryKey
@@ -109,6 +124,18 @@ export function useDeleteCompanyMutation() {
   return useMutation({
     mutationFn: async (id: string) => {
       await api.delete(`/companies/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: COMPANIES_KEY })
+    },
+  })
+}
+
+export function useBulkDeleteCompaniesMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await api.post('/companies/bulk-delete', { ids })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COMPANIES_KEY })

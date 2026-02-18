@@ -25,6 +25,9 @@ router
   .get(companyController.getAllCompanies)
   .post(validateBody(companySchemaZod), companyController.createCompany);
 
+// Bulk delete (must be above /:id to avoid route conflict)
+router.post("/bulk-delete", companyController.deleteMultipleCompanies);
+
 router
   .route("/:id")
   .get(companyController.getCompany)
@@ -39,20 +42,20 @@ router
 router.post(
   "/:companyId/contacts",
   validateBody(contactSchemaZod),
-  companyController.addContact
+  companyController.addContact,
 );
 
 // Update contact
 router.patch(
   "/:companyId/contacts/:contactId",
   validateBody(contactSchemaZod.partial()),
-  companyController.updateContact
+  companyController.updateContact,
 );
 
 // Delete contact
 router.delete(
   "/:companyId/contacts/:contactId",
-  companyController.deleteContact
+  companyController.deleteContact,
 );
 
 /* =========================================================

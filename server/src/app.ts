@@ -54,7 +54,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // 7. Data sanitization against NoSQL query injection
@@ -84,14 +84,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // 9. Prevent HTTP Parameter Pollution
 app.use(
   hpp({
-    whitelist: [
-      "sort",
-      "page",
-      "limit",
-      "fields",
-      // add your own fields that should allow multiple values
-    ],
-  })
+    whitelist: ["sort", "page", "limit", "fields", "leadStatus", "priority"],
+  }),
 );
 
 // ======================

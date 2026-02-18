@@ -4,8 +4,8 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { useDeleteCompanyMutation } from '../hooks/use-companies-api'
 import type { Company } from '../data/schema'
+import { useDeleteCompanyMutation } from '../hooks/use-companies-api'
 
 type CompanyDeleteDialogProps = {
   open: boolean
@@ -28,8 +28,11 @@ export function CompanyDeleteDialog({
       toast.success('Company deleted successfully.')
       onOpenChange(false)
       setValue('')
-    } catch {
-      // Error handled by mutation onError
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || 'Failed to delete company. Please try again.'
+      toast.error(message)
     }
   }
 

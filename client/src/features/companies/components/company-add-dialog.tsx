@@ -6,9 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { CompanyForm } from './company-add-form'
-import { useCreateCompanyMutation } from '../hooks/use-companies-api'
 import type { CompanyInput } from '../data/schema'
+import { useCreateCompanyMutation } from '../hooks/use-companies-api'
+import { CompanyForm } from './company-add-form'
 
 type CompanyAddDialogProps = {
   open: boolean
@@ -26,8 +26,12 @@ export function CompanyAddDialog({
       await createMutation.mutateAsync(values)
       toast.success('Company created successfully.')
       onOpenChange(false)
-    } catch {
-      // Error handled by mutation onError
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
+        'Failed to create company. Please check the form and try again.'
+      toast.error(message)
     }
   }
 
@@ -47,7 +51,10 @@ export function CompanyAddDialog({
           </DialogDescription>
         </DialogHeader>
         <div className='max-h-[70vh] overflow-y-auto py-1 pe-3'>
-          <CompanyForm onSubmit={onSubmit} isPending={createMutation.isPending} />
+          <CompanyForm
+            onSubmit={onSubmit}
+            isPending={createMutation.isPending}
+          />
         </div>
       </DialogContent>
     </Dialog>

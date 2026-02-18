@@ -54,6 +54,13 @@ export const companySchema = z.object({
 })
 export type Company = z.infer<typeof companySchema>
 
+// Preprocess helper: converts empty strings to undefined so optional date fields
+// don't fail server-side z.coerce.date() validation.
+const optionalDateString = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z.string().optional()
+)
+
 // Form input types (for create/update)
 export const companyInputSchema = z.object({
   name: z.string().min(1, 'Company name is required.'),
@@ -68,15 +75,15 @@ export const companyInputSchema = z.object({
   whoBrought: z.string().optional(),
   assignedTo: z.string().optional(),
   ndaStatus: z.enum(['Not Sent', 'Sent', 'Signed', 'Expired']).optional(),
-  ndaSignedDate: z.string().optional().or(z.date()),
-  ndaExpiryDate: z.string().optional().or(z.date()),
+  ndaSignedDate: optionalDateString,
+  ndaExpiryDate: optionalDateString,
   ndaFile: z.any().optional(),
   mouStatus: z.enum(['Not Sent', 'Sent', 'Signed', 'Expired']).optional(),
-  mouSignedDate: z.string().optional().or(z.date()),
-  mouExpiryDate: z.string().optional().or(z.date()),
+  mouSignedDate: optionalDateString,
+  mouExpiryDate: optionalDateString,
   mouFile: z.any().optional(),
   emailSent: z.enum(['Yes', 'No']).optional(),
-  emailSentDate: z.string().optional().or(z.date()),
+  emailSentDate: optionalDateString,
   notes: z.array(z.string()).default([]),
 })
 export type CompanyInput = z.infer<typeof companyInputSchema>
@@ -85,6 +92,7 @@ export type CompanyInput = z.infer<typeof companyInputSchema>
 export const companiesListResponseSchema = z.object({
   status: z.literal('success'),
   results: z.number(),
+  totalCount: z.number(),
   data: z.object({
     companies: z.array(companySchema),
   }),

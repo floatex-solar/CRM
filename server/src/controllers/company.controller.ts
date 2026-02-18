@@ -21,6 +21,26 @@ export const createCompany = catchAsync(async (req: Request, res: Response) => {
 });
 
 // ─────────────────────────────────────────
+// Bulk delete companies
+// ─────────────────────────────────────────
+export const deleteMultipleCompanies = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return next(new AppError("Please provide an array of company IDs", 400));
+    }
+
+    await CompanyModel.deleteMany({ _id: { $in: ids } });
+
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  },
+);
+
+// ─────────────────────────────────────────
 // Get single company
 // ─────────────────────────────────────────
 export const getCompany = catchAsync(
@@ -35,7 +55,7 @@ export const getCompany = catchAsync(
       status: "success",
       data: { company },
     });
-  }
+  },
 );
 
 // ─────────────────────────────────────────
@@ -43,20 +63,53 @@ export const getCompany = catchAsync(
 // ─────────────────────────────────────────
 export const getAllCompanies = catchAsync(
   async (req: Request, res: Response) => {
-    const features = new APIFeatures(CompanyModel.find(), req.query as any)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
+    // Build a base filter from query params (for counting before pagination)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const baseFilter: Record<string, any> = {};
 
-    const companies = await features.query;
+    // Text search on name
+    if (req.query.search && typeof req.query.search === "string") {
+      baseFilter.name = { $regex: req.query.search, $options: "i" };
+    }
+
+    // Faceted filters
+    if (req.query.leadStatus) {
+      baseFilter.leadStatus = Array.isArray(req.query.leadStatus)
+        ? { $in: req.query.leadStatus }
+        : req.query.leadStatus;
+    }
+    if (req.query.priority) {
+      baseFilter.priority = Array.isArray(req.query.priority)
+        ? { $in: req.query.priority }
+        : req.query.priority;
+    }
+
+    // Count total matching documents (before pagination)
+    const totalCount = await CompanyModel.countDocuments(baseFilter);
+
+    // Paginate
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Sort
+    const sortBy = req.query.sort
+      ? String(req.query.sort).split(",").join(" ")
+      : "-createdAt";
+
+    const companies = await CompanyModel.find(baseFilter)
+      .sort(sortBy)
+      .skip(skip)
+      .limit(limit)
+      .select("-__v");
 
     res.status(200).json({
       status: "success",
       results: companies.length,
+      totalCount,
       data: { companies },
     });
-  }
+  },
 );
 
 // ─────────────────────────────────────────
@@ -70,7 +123,7 @@ export const updateCompany = catchAsync(
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     if (!company) {
@@ -81,7 +134,7 @@ export const updateCompany = catchAsync(
       status: "success",
       data: { company },
     });
-  }
+  },
 );
 
 // ─────────────────────────────────────────
@@ -99,7 +152,7 @@ export const deleteCompany = catchAsync(
       status: "success",
       data: null,
     });
-  }
+  },
 );
 
 export const addContact = catchAsync(
@@ -117,7 +170,7 @@ export const addContact = catchAsync(
       status: "success",
       data: { company },
     });
-  }
+  },
 );
 
 export const updateContact = catchAsync(
@@ -138,7 +191,7 @@ export const updateContact = catchAsync(
       status: "success",
       data: { company },
     });
-  }
+  },
 );
 
 export const deleteContact = catchAsync(
@@ -159,5 +212,5 @@ export const deleteContact = catchAsync(
       status: "success",
       data: null,
     });
-  }
+  },
 );

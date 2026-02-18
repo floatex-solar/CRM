@@ -49,34 +49,43 @@ const addressSchemaZod = z.object({
    Note: Base schema has no refinements so .partial() works (Zod v4)
 ====================================================== */
 
+// Helper: converts empty strings to undefined so z.coerce.date() doesn't
+// fail on blank form inputs.
+const optionalDate = z.preprocess(
+  (v) => (v === "" ? undefined : v),
+  z.coerce.date().optional(),
+);
+
 const baseCompanySchemaZod = z.object({
   name: z.string().min(1, "Company name required"),
   typeOfCompany: z.string().optional(),
   industry: z.string().optional(),
   website: z.string().optional(),
 
-  address: z.object({
-    country: z.string().optional(),
-    region: z.string().optional(),
-    subRegion: z.string().optional(),
-    state: z.string().optional(),
-    city: z.string().optional(),
-    streetAddress: z.string().optional(),
-    postalCode: z.string().optional(),
-  }).optional(),
+  address: z
+    .object({
+      country: z.string().optional(),
+      region: z.string().optional(),
+      subRegion: z.string().optional(),
+      state: z.string().optional(),
+      city: z.string().optional(),
+      streetAddress: z.string().optional(),
+      postalCode: z.string().optional(),
+    })
+    .optional(),
 
   contacts: z.array(contactSchemaZod).default([]),
 
   ndaStatus: z.string().optional(),
-  ndaSignedDate: z.coerce.date().optional(),
-  ndaExpiryDate: z.coerce.date().optional(),
+  ndaSignedDate: optionalDate,
+  ndaExpiryDate: optionalDate,
 
   mouStatus: z.string().optional(),
-  mouSignedDate: z.coerce.date().optional(),
-  mouExpiryDate: z.coerce.date().optional(),
+  mouSignedDate: optionalDate,
+  mouExpiryDate: optionalDate,
 
   emailSent: z.string().optional(),
-  emailSentDate: z.coerce.date().optional(),
+  emailSentDate: optionalDate,
 
   leadStatus: z.string().optional(),
   priority: z.string().optional(),
@@ -86,8 +95,8 @@ const baseCompanySchemaZod = z.object({
   assignedTo: z.string().optional(),
   createdBy: z.string().optional(),
 
-  lastContactedDate: z.coerce.date().optional(),
-  nextFollowUpDate: z.coerce.date().optional(),
+  lastContactedDate: optionalDate,
+  nextFollowUpDate: optionalDate,
 
   notes: z.array(z.string()).optional(),
 });
@@ -100,7 +109,7 @@ const contactsRefinement = (
       message: string;
       path: (string | number)[];
     }) => void;
-  }
+  },
 ) => {
   let primary = 0;
   let secondary = 0;
@@ -167,7 +176,7 @@ const AgreementSchema = new Schema<IAgreement>(
     expiryDate: Date,
     documentUrl: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 /* ======================================================
@@ -183,7 +192,7 @@ const AddressSchema = new Schema(
     addressLine: String,
     postalCode: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 export interface ICompanyDocument extends ICompany, Document {}
@@ -253,7 +262,7 @@ const CompanySchema = new Schema<ICompanyDocument>(
 
     notes: [String],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* ======================================================

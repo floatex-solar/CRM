@@ -24,11 +24,21 @@ export default class APIFeatures<T> {
     const queryObj = { ...this.queryStr };
 
     // Remove special fields
-    const excludedFields = ["page", "sort", "limit", "fields"];
+    const excludedFields = ["page", "sort", "limit", "fields", "search"];
     excludedFields.forEach((el) => delete queryObj[el]);
 
+    // Convert array values to MongoDB $in operator for faceted filtering
+    const processed: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(queryObj)) {
+      if (Array.isArray(value)) {
+        processed[key] = { $in: value };
+      } else {
+        processed[key] = value;
+      }
+    }
+
     // Convert operators to MongoDB format ($gte, $gt...)
-    let queryStr = JSON.stringify(queryObj);
+    let queryStr = JSON.stringify(processed);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
     // Apply filtering

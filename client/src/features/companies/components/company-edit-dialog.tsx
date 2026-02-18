@@ -6,9 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { CompanyForm } from './company-add-form'
-import { useUpdateCompanyMutation } from '../hooks/use-companies-api'
 import type { Company, CompanyInput } from '../data/schema'
+import { useUpdateCompanyMutation } from '../hooks/use-companies-api'
+import { CompanyForm } from './company-add-form'
 
 type CompanyEditDialogProps = {
   open: boolean
@@ -28,8 +28,12 @@ export function CompanyEditDialog({
       await updateMutation.mutateAsync({ id: currentRow._id, input: values })
       toast.success('Company updated successfully.')
       onOpenChange(false)
-    } catch {
-      // Error handled by mutation onError
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
+        'Failed to update company. Please check the form and try again.'
+      toast.error(message)
     }
   }
 
@@ -48,10 +52,10 @@ export function CompanyEditDialog({
           </DialogDescription>
         </DialogHeader>
         <div className='max-h-[70vh] overflow-y-auto py-1 pe-3'>
-          <CompanyForm 
-            initialData={currentRow} 
-            onSubmit={onSubmit} 
-            isPending={updateMutation.isPending} 
+          <CompanyForm
+            initialData={currentRow}
+            onSubmit={onSubmit}
+            isPending={updateMutation.isPending}
           />
         </div>
       </DialogContent>
