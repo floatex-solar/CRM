@@ -22,7 +22,17 @@ const { PORT, NODE_ENV, FRONTEND_URL } = appConfig;
 // 1. Security HTTP headers
 app.use(helmet());
 
-// 2. Request logging
+// 2. CORS – allow requests from frontend
+app.use(
+  cors({
+    origin: true, // Reflects the request origin, allowing multiple origins
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  }),
+);
+
+// 3. Request logging
 if (NODE_ENV === "development") {
   app.use(morgan("dev"));
 } else {
@@ -47,15 +57,7 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 // 5. Cookie parser (useful if you plan to use cookies / sessions / JWT in cookies)
 app.use(cookieParser());
 
-// 6. CORS – be more restrictive in production!
-app.use(
-  cors({
-    origin: FRONTEND_URL ? FRONTEND_URL.split(",") : "http://localhost:5173", // or your frontend URL
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+// 6. CORS – (Moved to top)
 
 // 7. Data sanitization against NoSQL query injection
 // NOTE:
@@ -84,7 +86,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // 9. Prevent HTTP Parameter Pollution
 app.use(
   hpp({
-    whitelist: ["sort", "page", "limit", "fields", "leadStatus", "priority"],
+    whitelist: [
+      "sort",
+      "page",
+      "limit",
+      "fields",
+      "leadStatus",
+      "priority",
+      "search",
+    ],
   }),
 );
 
