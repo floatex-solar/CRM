@@ -1,12 +1,34 @@
 import { type ColumnDef } from '@tanstack/react-table'
-import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { leadStatuses, priorities } from '../data/data'
 import { type Company } from '../data/schema'
 import { CompaniesRowActions } from './companies-row-actions'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export const companiesColumns: ColumnDef<Company>[] = [
+  {
+    id: 'expander',
+    header: () => null,
+    cell: ({ row }) => {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            row.toggleExpanded()
+          }}
+          className='flex h-6 w-6 items-center justify-center rounded-md hover:bg-accent'
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className='h-4 w-4' />
+          ) : (
+            <ChevronRight className='h-4 w-4' />
+          )}
+        </button>
+      )
+    },
+  },
   {
     id: 'select',
     header: ({ table }) => (
@@ -32,127 +54,85 @@ export const companiesColumns: ColumnDef<Company>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: '_id',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='ID' />
-    ),
-    cell: ({ row }) => (
-      <div className='w-[80px] truncate font-mono text-xs'>
-        {String(row.getValue('_id')).slice(-8)}
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title='Company Name' />
     ),
-    meta: {
-      className: 'ps-1 max-w-0 w-2/3',
-      tdClassName: 'ps-4',
-    },
-    cell: ({ row }) => {
-      const company = row.original
-      const categoryLabels = (company.categories ?? []).slice(0, 2)
-      return (
-        <div className='flex flex-col gap-1'>
-          <span className='truncate font-medium'>{company.name}</span>
-          {categoryLabels.length > 0 && (
-            <div className='flex flex-wrap gap-1'>
-              {categoryLabels.map((cat) => (
-                <Badge key={cat} variant='outline' className='text-xs'>
-                  {cat}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      )
-    },
+    cell: ({ row }) => (
+      <div className='flex flex-col'>
+        <span className='max-w-[150px] truncate font-medium'>
+          {row.getValue('name')}
+        </span>
+        <span className='text-[10px] text-muted-foreground uppercase tracking-tight'>
+          {row.original.typeOfCompany || 'Unknown Type'}
+        </span>
+      </div>
+    ),
   },
   {
     accessorKey: 'industry',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Industry' />
     ),
-    cell: ({ row }) => (
-      <span className='text-muted-foreground'>
-        {row.getValue('industry') || '-'}
-      </span>
-    ),
+    cell: ({ row }) => <span className='truncate'>{row.getValue('industry') || '-'}</span>,
   },
   {
     accessorKey: 'leadStatus',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Lead Status' />
+      <DataTableColumnHeader column={column} title='Status' />
     ),
-    meta: { className: 'ps-1', tdClassName: 'ps-4' },
     cell: ({ row }) => {
-      const status = leadStatuses.find(
-        (s) => s.value === row.getValue('leadStatus')
-      )
-      if (!status) return <span className='text-muted-foreground'>-</span>
-      return <span>{status.label}</span>
+      const status = leadStatuses.find((s) => s.value === row.getValue('leadStatus'))
+      return <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground')}>{status?.label || row.getValue('leadStatus')}</span>
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: 'priority',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Priority' />
     ),
-    meta: { className: 'ps-1', tdClassName: 'ps-3' },
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (p) => p.value === row.getValue('priority')
-      )
-      if (!priority) return <span className='text-muted-foreground'>-</span>
-      return <span>{priority.label}</span>
+      const priority = priorities.find((p) => p.value === row.getValue('priority'))
+      return <span className='text-xs font-medium'>{priority?.label || row.getValue('priority')}</span>
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
-    accessorKey: 'website',
+    accessorKey: 'leadSource',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Website' />
+      <DataTableColumnHeader column={column} title='Source' />
     ),
-    cell: ({ row }) => {
-      const url = row.getValue('website') as string | undefined
-      if (!url) return <span className='text-muted-foreground'>-</span>
-      return (
-        <a
-          href={url.startsWith('http') ? url : `https://${url}`}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-primary hover:underline truncate max-w-[120px] block'
-        >
-          {url}
-        </a>
-      )
-    },
+    cell: ({ row }) => <span className='text-xs'>{row.getValue('leadSource') || '-'}</span>,
   },
   {
-    id: 'contacts',
-    accessorFn: (row) =>
-      row.contacts?.map((c) => c.name).join(', ') ?? '',
-    header: 'Contacts',
-    cell: ({ row }) => {
-      const contacts = row.original.contacts ?? []
-      if (contacts.length === 0)
-        return <span className='text-muted-foreground'>-</span>
-      return (
-        <span className='truncate max-w-[150px] block' title={contacts.map((c) => c.name).join(', ')}>
-          {contacts[0]?.name}
-          {contacts.length > 1 && ` +${contacts.length - 1}`}
-        </span>
-      )
-    },
+    accessorKey: 'whoBrought',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Brought By' />
+    ),
+    cell: ({ row }) => <span className='text-xs'>{row.getValue('whoBrought') || '-'}</span>,
+  },
+  {
+    accessorKey: 'ndaStatus',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='NDA' />
+    ),
+    cell: ({ row }) => (
+      <span className={cn('text-[10px] px-1.5 py-0.5 rounded border font-semibold', row.original.ndaStatus === 'Signed' ? 'border-green-500 text-green-600 bg-green-50' : 'border-orange-500 text-orange-600 bg-orange-50')}>
+        {row.original.ndaStatus || 'Not Sent'}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'mouStatus',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='MOU' />
+    ),
+    cell: ({ row }) => (
+      <span className={cn('text-[10px] px-1.5 py-0.5 rounded border font-semibold', row.original.mouStatus === 'Signed' ? 'border-green-500 text-green-600 bg-green-50' : 'border-orange-500 text-orange-600 bg-orange-50')}>
+        {row.original.mouStatus || 'Not Sent'}
+      </span>
+    ),
   },
   {
     id: 'actions',

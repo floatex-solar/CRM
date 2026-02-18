@@ -4,6 +4,7 @@ import { Router } from "express";
 // import authRoutes from "./auth.routes";
 import userRoutes from "./user.routes.js";
 import companyRoutes from "./company.routes.js";
+import lookupRoutes from "./lookup.routes.js";
 // import profileRoutes from "./profile.routes";
 // import categoryRoutes from "./category.routes";
 // import subCategoryRoutes from "./subcategory.routes";
@@ -34,6 +35,7 @@ const router: Router = Router();
 
 router.use("/users", userRoutes);
 router.use("/companies", companyRoutes);
+router.use("/lookups", lookupRoutes);
 // router.use("/profile", profileRoutes);
 
 /* ---------------------- Item Routes ---------------------- */

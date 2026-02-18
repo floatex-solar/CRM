@@ -52,16 +52,17 @@ export interface IAgreement {
 
 export interface ICompany {
   name: string;
+  typeOfCompany?: string;
   industry?: string;
-  categories: CompanyCategory[];
   website?: string;
 
   address: {
     country?: string;
     region?: string;
+    subRegion?: string;
     state?: string;
     city?: string;
-    addressLine?: string;
+    streetAddress?: string;
     postalCode?: string;
   };
 
@@ -69,15 +70,26 @@ export interface ICompany {
 
   introMailSent?: boolean;
   introMailDate?: Date;
-  nda?: IAgreement;
-  mou?: IAgreement;
+
+  nda?: IAgreement & { file?: any };
+  mou?: IAgreement & { file?: any };
+
+  ndaStatus?: string;
+  ndaSignedDate?: Date;
+  ndaExpiryDate?: Date;
+
+  mouStatus?: string;
+  mouSignedDate?: Date;
+  mouExpiryDate?: Date;
+
+  emailSent?: string;
+  emailSentDate?: Date;
 
   leadStatus?: LeadStatus;
-  relationshipType?: RelationshipType;
   priority?: Priority;
 
   leadSource?: string;
-  reference?: string;
+  whoBrought?: string;
   assignedTo?: string;
   createdBy?: string;
 

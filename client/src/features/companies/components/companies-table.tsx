@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import {
   type SortingState,
   type VisibilityState,
+  type ExpandedState,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
@@ -29,6 +31,7 @@ import {
   companiesQueryOptions,
 } from '../hooks/use-companies-api'
 import { companiesColumns as columns } from './companies-columns'
+import { Mail, Phone, User as UserIcon } from 'lucide-react'
 
 const route = getRouteApi('/_authenticated/companies/')
 
@@ -48,6 +51,7 @@ export function CompaniesTable() {
   const [rowSelection, setRowSelection] = useState({})
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [expanded, setExpanded] = useState<ExpandedState>({})
 
   const {
     globalFilter,
@@ -78,23 +82,20 @@ export function CompaniesTable() {
       columnFilters,
       globalFilter,
       pagination,
+      expanded,
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const name = String(row.getValue('name')).toLowerCase()
-      const id = String(row.getValue('_id')).toLowerCase()
-      const searchValue = String(filterValue).toLowerCase()
-      return name.includes(searchValue) || id.includes(searchValue)
-    },
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    getExpandedRowModel: getExpandedRowModel(),
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
@@ -162,25 +163,74 @@ export function CompaniesTable() {
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        cell.column.columnDef.meta?.className,
-                        cell.column.columnDef.meta?.tdClassName
-                      )}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <Fragment key={row.id}>
+                  <TableRow
+                    data-state={row.getIsSelected() && 'selected'}
+                    className='cursor-pointer hover:bg-muted/50 transition-colors'
+                    onClick={() => row.toggleExpanded()}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          cell.column.columnDef.meta?.className,
+                          cell.column.columnDef.meta?.tdClassName,
+                          'py-3'
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {row.getIsExpanded() && (
+                    <TableRow className='bg-muted/30'>
+                      <TableCell colSpan={row.getVisibleCells().length} className='p-0'>
+                        <div className='px-12 py-6 border-b'>
+                          <div className='flex items-center gap-2 mb-4'>
+                            <UserIcon className='h-4 w-4 text-primary' />
+                            <h4 className='text-sm font-semibold uppercase tracking-wider text-muted-foreground'>
+                              Contact Persons
+                            </h4>
+                          </div>
+                          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                            {row.original.contacts?.map((contact, idx) => (
+                              <div key={idx} className='flex flex-col gap-2 p-4 rounded-lg bg-background border shadow-sm'>
+                                <div className='flex items-center justify-between border-b pb-2 mb-2'>
+                                  <span className='font-bold text-sm'>{contact.name}</span>
+                                  <span className='text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium uppercase'>
+                                    {contact.role || 'Other'}
+                                  </span>
+                                </div>
+                                <div className='space-y-1.5'>
+                                  <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                                    <UserIcon className='h-3 w-3' />
+                                    <span>{contact.designation || 'No Designation'}</span>
+                                  </div>
+                                  <div className='flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors'>
+                                    <Mail className='h-3 w-3' />
+                                    <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()}>{contact.email || 'No Email'}</a>
+                                  </div>
+                                  <div className='flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors'>
+                                    <Phone className='h-3 w-3' />
+                                    <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()}>{contact.phone || 'No Phone'}</a>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {(!row.original.contacts || row.original.contacts.length === 0) && (
+                              <div className='col-span-full py-4 text-center text-sm text-muted-foreground italic'>
+                                No contact persons registered for this company.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
               ))
             ) : (
               <TableRow>

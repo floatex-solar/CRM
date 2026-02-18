@@ -51,26 +51,38 @@ const addressSchemaZod = z.object({
 
 const baseCompanySchemaZod = z.object({
   name: z.string().min(1, "Company name required"),
+  typeOfCompany: z.string().optional(),
   industry: z.string().optional(),
-  categories: z.array(z.string()).default([]),
   website: z.string().optional(),
 
-  address: addressSchemaZod.optional(),
+  address: z.object({
+    country: z.string().optional(),
+    region: z.string().optional(),
+    subRegion: z.string().optional(),
+    state: z.string().optional(),
+    city: z.string().optional(),
+    streetAddress: z.string().optional(),
+    postalCode: z.string().optional(),
+  }).optional(),
 
   contacts: z.array(contactSchemaZod).default([]),
 
-  introMailSent: z.boolean().optional(),
-  introMailDate: z.coerce.date().optional(),
+  ndaStatus: z.string().optional(),
+  ndaSignedDate: z.coerce.date().optional(),
+  ndaExpiryDate: z.coerce.date().optional(),
 
-  nda: agreementSchemaZod.optional(),
-  mou: agreementSchemaZod.optional(),
+  mouStatus: z.string().optional(),
+  mouSignedDate: z.coerce.date().optional(),
+  mouExpiryDate: z.coerce.date().optional(),
+
+  emailSent: z.string().optional(),
+  emailSentDate: z.coerce.date().optional(),
 
   leadStatus: z.string().optional(),
-  relationshipType: z.string().optional(),
   priority: z.string().optional(),
 
   leadSource: z.string().optional(),
-  reference: z.string().optional(),
+  whoBrought: z.string().optional(),
   assignedTo: z.string().optional(),
   createdBy: z.string().optional(),
 
@@ -189,70 +201,50 @@ const CompanySchema = new Schema<ICompanyDocument>(
       index: true,
     },
 
+    typeOfCompany: String,
     industry: String,
 
-    categories: [
-      {
-        type: String,
-        enum: [
-          "Developer",
-          "EPC",
-          "Consultant",
-          "Offtaker",
-          "End Customer",
-          "Subvendor",
-          "Supplier",
-          "Media",
-          "Partner",
-          "Distributor",
-        ],
-      },
-    ],
-
     website: String,
-    address: AddressSchema,
+    address: {
+      country: String,
+      region: String,
+      subRegion: String,
+      state: String,
+      city: String,
+      streetAddress: String,
+      postalCode: String,
+    },
 
     contacts: {
       type: [ContactSchema],
       default: [],
     },
 
-    introMailSent: { type: Boolean, default: false },
-    introMailDate: Date,
+    ndaStatus: String,
+    ndaSignedDate: Date,
+    ndaExpiryDate: Date,
 
-    nda: AgreementSchema,
-    mou: AgreementSchema,
+    mouStatus: String,
+    mouSignedDate: Date,
+    mouExpiryDate: Date,
+
+    emailSent: { type: String, default: "No" },
+    emailSentDate: Date,
 
     leadStatus: {
       type: String,
-      enum: [
-        "New",
-        "Contacted",
-        "In Discussion",
-        "Proposal Sent",
-        "Negotiation",
-        "Converted",
-        "Dropped",
-        "On Hold",
-      ],
       default: "New",
       index: true,
     },
 
-    relationshipType: {
-      type: String,
-      enum: ["Cold", "Warm", "Hot", "Existing Client", "Partner", "Vendor"],
-    },
-
     priority: {
       type: String,
-      enum: ["High", "Medium", "Low", "Strategic"],
       default: "Medium",
       index: true,
     },
 
     leadSource: String,
-    reference: String,
+    whoBrought: String,
     assignedTo: { type: String, index: true },
     createdBy: String,
 
