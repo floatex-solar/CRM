@@ -52,7 +52,8 @@ export function ProfileForm() {
   } = useAuthStore()
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(profileFormSchema) as any,
     values: user
       ? {
           name: user.name,

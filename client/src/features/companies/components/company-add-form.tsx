@@ -52,7 +52,8 @@ export function CompanyForm({
   isPending,
 }: CompanyFormProps) {
   const form = useForm<CompanyInput>({
-    resolver: zodResolver(companyInputSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(companyInputSchema) as any,
     defaultValues: {
       name: initialData?.name ?? '',
       typeOfCompany: initialData?.typeOfCompany ?? '',
