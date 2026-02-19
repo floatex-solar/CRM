@@ -23,6 +23,7 @@ import {
   GalleryVerticalEnd,
   Building2,
   Target,
+  MapPin,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -68,6 +69,11 @@ export const sidebarData: SidebarData = {
           title: 'Leads',
           url: '/leads',
           icon: Target,
+        },
+        {
+          title: 'Sites',
+          url: '/sites',
+          icon: MapPin,
         },
         {
           title: 'Tasks',

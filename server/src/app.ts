@@ -124,6 +124,10 @@ app.get("/health", (req: Request, res: Response) => {
 // ======================
 app.use("/api", routes);
 
+// Serve static files (uploads)
+// 'public' is relative to where the server process starts, usually root
+app.use("/uploads", express.static("public/uploads"));
+
 // ======================
 // 404 - Not Found
 // ======================
