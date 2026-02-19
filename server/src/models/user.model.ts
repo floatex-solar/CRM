@@ -16,6 +16,11 @@ export const userSchemaZod = z
       .transform((val) => val.toLowerCase()),
     role: z.enum(["admin", "user"]).default("user"),
     photo: z.string().url().optional().or(z.literal("")),
+    bio: z.string().max(300).optional().default(""),
+    urls: z
+      .array(z.object({ label: z.string(), value: z.string().url() }))
+      .optional()
+      .default([]),
     password: z.string().min(8, "Password must be at least 8 characters"),
     passwordConfirm: z.string(),
     // Fields not required on input
@@ -39,6 +44,8 @@ export interface IUser {
   email: string;
   role: "user" | "admin";
   photo?: string;
+  bio?: string;
+  urls?: { label: string; value: string }[];
   password: string;
   passwordConfirm?: string | undefined; // only exists temporarily
   passwordChangedAt?: Date;
@@ -49,7 +56,7 @@ export interface IUser {
   // instance methods
   correctPassword: (
     candidatePassword: string,
-    userPassword: string
+    userPassword: string,
   ) => Promise<boolean>;
   changedPasswordAfter: (JWTTimestamp: number) => boolean;
   createPasswordResetToken: () => string;
@@ -86,6 +93,15 @@ const userSchema = new Schema<IUser, UserModel>(
       type: String,
       default: "",
     },
+    bio: {
+      type: String,
+      default: "",
+      maxlength: 300,
+    },
+    urls: {
+      type: [{ label: String, value: String }],
+      default: [],
+    },
     password: {
       type: String,
       required: [true, "Please provide a password"],
@@ -112,7 +128,7 @@ const userSchema = new Schema<IUser, UserModel>(
   },
   {
     timestamps: true, // optional: adds createdAt & updatedAt
-  }
+  },
 );
 
 // ────────────────────────────────────────────────
@@ -148,17 +164,17 @@ userSchema.pre(/^find/, function (this: any) {
 // ────────────────────────────────────────────────
 userSchema.methods.correctPassword = async function (
   candidatePassword: string,
-  userPassword: string
+  userPassword: string,
 ): Promise<boolean> {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
 userSchema.methods.changedPasswordAfter = function (
-  JWTTimestamp: number
+  JWTTimestamp: number,
 ): boolean {
   if (this.passwordChangedAt) {
     const changedTimestamp = Math.floor(
-      this.passwordChangedAt.getTime() / 1000
+      this.passwordChangedAt.getTime() / 1000,
     );
     return JWTTimestamp < changedTimestamp;
   }

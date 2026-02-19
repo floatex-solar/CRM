@@ -1,55 +1,23 @@
 import {
-  Construction,
-  LayoutDashboard,
-  Monitor,
-  Bug,
-  ListTodo,
-  FileX,
-  HelpCircle,
-  Lock,
-  Bell,
-  Package,
-  Palette,
-  ServerOff,
   Settings,
-  Wrench,
   UserCog,
-  UserX,
   Users,
-  MessagesSquare,
-  ShieldCheck,
-  AudioWaveform,
+  Palette,
+  HelpCircle,
   Command,
-  GalleryVerticalEnd,
   Building2,
   Target,
   MapPin,
 } from 'lucide-react'
-import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
 
-export const sidebarData: SidebarData = {
-  user: {
-    name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
+export const sidebarData: Omit<SidebarData, 'user'> = {
   teams: [
     {
-      name: 'Shadcn Admin',
+      name: 'Floatex Solar',
       logo: Command,
-      plan: 'Vite + ShadcnUI',
+      plan: 'CRM',
     },
-    // {
-    //   name: 'Acme Inc',
-    //   logo: GalleryVerticalEnd,
-    //   plan: 'Enterprise',
-    // },
-    // {
-    //   name: 'Acme Corp.',
-    //   logo: AudioWaveform,
-    //   plan: 'Startup',
-    // },
   ],
   navGroups: [
     {
@@ -91,11 +59,11 @@ export const sidebarData: SidebarData = {
         //   badge: '3',
         //   icon: MessagesSquare,
         // },
-        // {
-        //   title: 'Users',
-        //   url: '/users',
-        //   icon: Users,
-        // },
+        {
+          title: 'Users',
+          url: '/users',
+          icon: Users,
+        },
         // {
         //   title: 'Secured by Clerk',
         //   icon: ClerkLogo,

@@ -31,13 +31,17 @@ export const getUser = catchAsync(
       status: "success",
       data: { user },
     });
-  }
+  },
 );
 
 // ────────────────────────────────────────────────
 // Get all users (admin only)
 // ────────────────────────────────────────────────
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  // Get total count before pagination
+  const countFilter = new APIFeatures(User.find(), req.query as any).filter();
+  const totalCount = await User.countDocuments(countFilter.query.getFilter());
+
   const features = new APIFeatures(User.find(), req.query as any)
     .filter()
     .sort()
@@ -49,6 +53,7 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   res.status(200).json({
     status: "success",
     results: users.length,
+    totalCount,
     data: { users },
   });
 });
@@ -83,7 +88,7 @@ export const updateUser = catchAsync(
       status: "success",
       data: { user: updatedUser },
     });
-  }
+  },
 );
 
 // ────────────────────────────────────────────────
@@ -101,7 +106,7 @@ export const deleteUser = catchAsync(
       status: "success",
       data: null,
     });
-  }
+  },
 );
 
 // ────────────────────────────────────────────────
@@ -114,13 +119,13 @@ export const updateMe = catchAsync(
       return next(
         new AppError(
           "This route is not for password updates. Please use /updateMyPassword",
-          400
-        )
+          400,
+        ),
       );
     }
 
     // 2) Filter allowed fields
-    const allowedUpdates = ["name", "email", "photo"] as const;
+    const allowedUpdates = ["name", "photo", "bio", "urls"] as const;
     const filteredBody: Partial<Pick<IUser, (typeof allowedUpdates)[number]>> =
       {};
 
@@ -140,14 +145,14 @@ export const updateMe = catchAsync(
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     res.status(200).json({
       status: "success",
       data: { user: updatedUser },
     });
-  }
+  },
 );
 
 // ────────────────────────────────────────────────

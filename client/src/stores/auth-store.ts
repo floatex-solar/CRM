@@ -8,10 +8,14 @@ const ACCESS_TOKEN =
   import.meta.env.VITE_ACCESS_TOKEN_KEY || '__Host-auth-token-v1' // Use env for prod; httpOnly preferred on backend
 
 interface AuthUser {
-  _id: string // Renamed from 'accountNo' to '_id' for consistency with MongoDB's user ID
+  _id: string
+  name: string
   email: string
   role: string[]
-  exp: number // Token expiry timestamp (from JWT decode)
+  photo?: string
+  bio?: string
+  urls?: { label: string; value: string }[]
+  exp: number
 }
 
 interface AuthState {
@@ -35,9 +39,10 @@ const validateToken = (token: string): AuthUser | null => {
     if (decoded.exp * 1000 <= Date.now()) return null // Expired
     return {
       _id: decoded._id,
+      name: '',
       email: decoded.email,
       role: Array.isArray(decoded.role) ? decoded.role : [decoded.role],
-      exp: decoded.exp * 1000, // Convert to ms
+      exp: decoded.exp * 1000,
     }
   } catch {
     return null

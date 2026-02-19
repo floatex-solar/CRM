@@ -1,9 +1,13 @@
 import { z } from 'zod'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { useMutation } from '@tanstack/react-query'
+import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth-store'
+import api from '@/lib/axios'
 import { cn } from '@/lib/utils'
+import { useCurrentUser } from '@/hooks/use-current-user'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -15,162 +19,224 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
 const profileFormSchema = z.object({
-  username: z
-    .string('Please enter your username.')
-    .min(2, 'Username must be at least 2 characters.')
-    .max(30, 'Username must not be longer than 30 characters.'),
-  email: z.email({
-    error: (iss) =>
-      iss.input === undefined
-        ? 'Please select an email to display.'
-        : undefined,
-  }),
-  bio: z.string().max(160).min(4),
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters.')
+    .max(50, 'Name must not be longer than 50 characters.'),
+  email: z.string().email(),
+  bio: z
+    .string()
+    .max(300, 'Bio must not be longer than 300 characters.')
+    .optional()
+    .default(''),
   urls: z
     .array(
       z.object({
-        value: z.url('Please enter a valid URL.'),
+        label: z.string().min(1, 'Label is required.'),
+        value: z.string().url('Please enter a valid URL.'),
       })
     )
-    .optional(),
+    .optional()
+    .default([]),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
-}
-
 export function ProfileForm() {
+  const { data: user, isLoading } = useCurrentUser()
+  const {
+    auth: { setUser },
+  } = useAuthStore()
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    values: user
+      ? {
+          name: user.name,
+          email: user.email,
+          bio: user.bio ?? '',
+          urls: user.urls?.length ? user.urls : [{ label: '', value: '' }],
+        }
+      : undefined,
     mode: 'onChange',
   })
 
-  const { fields, append } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     name: 'urls',
     control: form.control,
   })
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: Omit<ProfileFormValues, 'email'>) => {
+      const { data: res } = await api.patch<{
+        status: string
+        data: {
+          user: {
+            _id: string
+            name: string
+            bio?: string
+            urls?: { label: string; value: string }[]
+          }
+        }
+      }>('/users/updateMe', data)
+      return res.data.user
+    },
+    onSuccess: (updatedUser) => {
+      setUser({
+        name: updatedUser.name,
+        bio: updatedUser.bio,
+        urls: updatedUser.urls,
+      })
+      toast.success('Profile updated successfully.')
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to update profile.')
+    },
+  })
+
+  const handleSubmit = (data: ProfileFormValues) => {
+    const { email: _email, ...updateData } = data
+    // Filter out empty URL entries
+    updateData.urls =
+      updateData.urls?.filter((u) => u.label.trim() && u.value.trim()) ?? []
+    updateMutation.mutate(updateData)
+  }
+
+  if (isLoading) {
+    return (
+      <div className='text-sm text-muted-foreground'>Loading profile...</div>
+    )
+  }
+
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
-        <FormField
-          control={form.control}
-          name='username'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder='shadcn' {...field} />
-              </FormControl>
-              <FormDescription>
-                This is your public display name. It can be your real name or a
-                pseudonym. You can only change this once every 30 days.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='email'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-8'>
+        <fieldset disabled={updateMutation.isPending} className='space-y-8'>
+          <FormField
+            control={form.control}
+            name='name'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select a verified email to display' />
-                  </SelectTrigger>
+                  <Input placeholder='Your name' {...field} />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value='m@example.com'>m@example.com</SelectItem>
-                  <SelectItem value='m@google.com'>m@google.com</SelectItem>
-                  <SelectItem value='m@support.com'>m@support.com</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                You can manage verified email addresses in your{' '}
-                <Link to='/'>email settings</Link>.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='bio'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder='Tell us a little bit about yourself'
-                  className='resize-none'
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                You can <span>@mention</span> other users and organizations to
-                link to them.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div>
-          {fields.map((field, index) => (
-            <FormField
-              control={form.control}
-              key={field.id}
-              name={`urls.${index}.value`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    URLs
-                  </FormLabel>
-                  <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                    Add links to your website, blog, or social media profiles.
-                  </FormDescription>
-                  <FormControl className={cn(index !== 0 && 'mt-1.5')}>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='mt-2'
-            onClick={() => append({ value: '' })}
-          >
-            Add URL
+                <FormDescription>
+                  This is your public display name.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='email'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled className='bg-muted' />
+                </FormControl>
+                <FormDescription>
+                  Your email address cannot be changed.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='bio'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder='Tell us a little bit about yourself'
+                    className='resize-none'
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Brief description for your profile. Max 300 characters.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div>
+            {fields.map((field, index) => (
+              <FormField
+                control={form.control}
+                key={field.id}
+                name={`urls.${index}.value`}
+                render={({ field: valueField }) => (
+                  <FormItem>
+                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                      URLs
+                    </FormLabel>
+                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
+                      Add links to your website, blog, or social media profiles.
+                    </FormDescription>
+                    <div className='flex items-start gap-2'>
+                      <FormField
+                        control={form.control}
+                        name={`urls.${index}.label`}
+                        render={({ field: labelField }) => (
+                          <FormItem className='flex-1'>
+                            <FormControl
+                              className={cn(index !== 0 && 'mt-1.5')}
+                            >
+                              <Input placeholder='Label' {...labelField} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormItem className='flex-[2]'>
+                        <FormControl className={cn(index !== 0 && 'mt-1.5')}>
+                          <Input placeholder='https://...' {...valueField} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                      {fields.length > 1 && (
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => remove(index)}
+                          className={cn(
+                            'h-9 w-9 text-muted-foreground',
+                            index !== 0 && 'mt-1.5'
+                          )}
+                        >
+                          <Trash2 className='h-4 w-4' />
+                        </Button>
+                      )}
+                    </div>
+                  </FormItem>
+                )}
+              />
+            ))}
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='mt-2 gap-x-1'
+              onClick={() => append({ label: '', value: '' })}
+            >
+              <Plus className='h-4 w-4' />
+              Add URL
+            </Button>
+          </div>
+          <Button type='submit' disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? 'Saving...' : 'Update profile'}
           </Button>
-        </div>
-        <Button type='submit'>Update profile</Button>
+        </fieldset>
       </form>
     </Form>
   )

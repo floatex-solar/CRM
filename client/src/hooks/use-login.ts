@@ -10,6 +10,12 @@ interface LoginCredentials {
   password: string
 }
 
+interface Url {
+  lable: string
+  value: string
+  _id: string
+}
+
 interface LoginResponse {
   status: string
   token: string
@@ -20,6 +26,7 @@ interface LoginResponse {
       email: string
       role: string | string[] // backend sends string, but your store expects array
       photo?: string
+      urls: Url[]
       createdAt?: string
       updatedAt?: string
       __v?: number
@@ -47,22 +54,25 @@ export function useLogin(redirectTo?: string) {
       // Extract the nested user
       const user = data.data.user
 
+      console.log(user)
+
       setUser({
         _id: user._id,
+        name: user.name ?? '',
         email: user.email,
-        // Handle role being string vs array
         role: typeof user.role === 'string' ? [user.role] : user.role,
-        // If you have real exp from JWT → parse it, otherwise fallback
+        photo: user.photo,
+        urls: user.urls,
         exp: Date.now() + 24 * 60 * 60 * 1000,
       })
 
       setAccessToken(data.token)
 
       toast.success('Login successful', {
-        description: `Welcome back, ${user.email}!`,
+        description: `Welcome back, ${user.name || user.email}!`,
       })
 
-      const target = redirectTo || '/dashboard'
+      const target = redirectTo || '/companies'
       navigate({ to: target, replace: true })
     },
 
