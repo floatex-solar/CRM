@@ -27,6 +27,8 @@ export const siteInputSchema = z.object({
   maxWaterLevel: z.string().min(1, 'Max water level is required.'),
   minDrawDownLevel: z.string().min(1, 'Min draw down level is required.'),
   fullReservoirLevel: z.string().min(1, 'Full reservoir level is required.'),
+  waterLevelVariation: z.string().optional().default(''),
+  fetchOfReservoir: z.string().optional().default(''),
   waveHeight: z.string().min(1, 'Wave height is required.'),
   waterCurrent: z.string().min(1, 'Water current is required.'),
 

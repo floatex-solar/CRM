@@ -49,7 +49,7 @@ export function TeamSwitcher({ teams }: TeamSwitcherProps) {
               <ChevronsUpDown className='ms-auto' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
+          {/* <DropdownMenuContent
             className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
             align='start'
             side={isMobile ? 'bottom' : 'right'}
@@ -78,7 +78,7 @@ export function TeamSwitcher({ teams }: TeamSwitcherProps) {
               </div>
               <div className='font-medium text-muted-foreground'>Add team</div>
             </DropdownMenuItem>
-          </DropdownMenuContent>
+          </DropdownMenuContent> */}
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

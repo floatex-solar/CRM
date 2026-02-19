@@ -26,6 +26,8 @@ export interface ISite extends Document {
   maxWaterLevel: string;
   minDrawDownLevel: string;
   fullReservoirLevel: string;
+  waterLevelVariation: string;
+  fetchOfReservoir: string;
   waveHeight: string;
   waterCurrent: string;
 

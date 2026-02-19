@@ -1,10 +1,32 @@
 import { type ColumnDef } from '@tanstack/react-table'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { type Site } from '../data/schema'
 import { SitesRowActions } from './sites-row-actions'
 
 export const sitesColumns: ColumnDef<Site>[] = [
+  {
+    id: 'expander',
+    header: () => null,
+    cell: ({ row }) => {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            row.toggleExpanded()
+          }}
+          className='flex h-6 w-6 items-center justify-center rounded-md hover:bg-accent'
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className='h-4 w-4' />
+          ) : (
+            <ChevronRight className='h-4 w-4' />
+          )}
+        </button>
+      )
+    },
+  },
   {
     id: 'select',
     header: ({ table }) => (
@@ -62,24 +84,6 @@ export const sitesColumns: ColumnDef<Site>[] = [
     ),
     cell: ({ row }) => (
       <span className='truncate'>{row.getValue('country') || '-'}</span>
-    ),
-  },
-  {
-    accessorKey: 'typeOfWaterBody',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Water Body' />
-    ),
-    cell: ({ row }) => (
-      <span className='text-xs'>{row.getValue('typeOfWaterBody') || '-'}</span>
-    ),
-  },
-  {
-    accessorKey: 'useOfWater',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Use of Water' />
-    ),
-    cell: ({ row }) => (
-      <span className='text-xs'>{row.getValue('useOfWater') || '-'}</span>
     ),
   },
   {

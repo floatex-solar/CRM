@@ -55,11 +55,11 @@ export const sidebarData: SidebarData = {
     {
       title: 'General',
       items: [
-        {
-          title: 'Dashboard',
-          url: '/',
-          icon: LayoutDashboard,
-        },
+        // {
+        //   title: 'Dashboard',
+        //   url: '/',
+        //   icon: LayoutDashboard,
+        // },
         {
           title: 'Companies',
           url: '/companies',
@@ -75,11 +75,11 @@ export const sidebarData: SidebarData = {
           url: '/sites',
           icon: MapPin,
         },
-        {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: ListTodo,
-        },
+        // {
+        //   title: 'Tasks',
+        //   url: '/tasks',
+        //   icon: ListTodo,
+        // },
         // {
         //   title: 'Apps',
         //   url: '/apps',
@@ -190,26 +190,26 @@ export const sidebarData: SidebarData = {
               url: '/settings',
               icon: UserCog,
             },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: Wrench,
-            },
+            // {
+            //   title: 'Account',
+            //   url: '/settings/account',
+            //   icon: Wrench,
+            // },
             {
               title: 'Appearance',
               url: '/settings/appearance',
               icon: Palette,
             },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: Bell,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: Monitor,
-            },
+            // {
+            //   title: 'Notifications',
+            //   url: '/settings/notifications',
+            //   icon: Bell,
+            // },
+            // {
+            //   title: 'Display',
+            //   url: '/settings/display',
+            //   icon: Monitor,
+            // },
           ],
         },
         {

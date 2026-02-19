@@ -4,12 +4,14 @@ import { getRouteApi } from '@tanstack/react-router'
 import {
   type SortingState,
   type VisibilityState,
+  type ExpandedState,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { Trash2, AlertTriangle } from 'lucide-react'
+import { Boxes, DollarSign, Anchor, Trash2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -34,6 +36,7 @@ import {
   DataTableBulkActions,
 } from '@/components/data-table'
 import { priorities } from '../data/data'
+import { type Lead, type DesignConfiguration } from '../data/schema'
 import {
   leadsQueryOptions,
   useBulkDeleteLeadsMutation,
@@ -41,6 +44,142 @@ import {
 import { leadsColumns as columns } from './leads-columns'
 
 const route = getRouteApi('/_authenticated/leads/')
+
+/* ─────────────────────────────────────────
+   Expanded Row Helpers
+───────────────────────────────────────── */
+
+/** Renders a labeled detail value. */
+function DetailItem({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number
+}) {
+  return (
+    <div>
+      <dt className='text-[10px] font-medium tracking-wider text-muted-foreground uppercase'>
+        {label}
+      </dt>
+      <dd className='mt-0.5 text-sm'>{value || '—'}</dd>
+    </div>
+  )
+}
+
+/** Renders a single design configuration card. */
+function DesignConfigCard({ dc }: { dc: DesignConfiguration }) {
+  return (
+    <div className='rounded-lg border bg-card p-4 shadow-sm'>
+      <span className='mb-2 inline-block rounded bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary'>
+        Version {dc.version ?? '—'}
+      </span>
+      <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'>
+        <DetailItem label='Module Capacity' value={dc.moduleCapacity} />
+        <DetailItem label='Module Dimension' value={dc.moduleDimension} />
+        <DetailItem label='Inverter Capacity' value={dc.inverterCapacity} />
+        <DetailItem label='Inverter Make' value={dc.inverterMake} />
+        <DetailItem label='Configuration' value={dc.configuration} />
+        <DetailItem label='Anchoring' value={dc.anchoring} />
+        <DetailItem label='Type of Anchoring' value={dc.typeOfAnchoring} />
+      </div>
+    </div>
+  )
+}
+
+/** Renders the expanded detail section for a single lead row. */
+function LeadExpandedRow({ lead }: { lead: Lead }) {
+  const currency = lead.currency || ''
+
+  return (
+    <div className='space-y-6 border-b px-12 py-6'>
+      {/* Design Configurations */}
+      {lead.designConfigurations.length > 0 && (
+        <div>
+          <div className='mb-4 flex items-center gap-2'>
+            <Boxes className='h-4 w-4 text-primary' />
+            <h4 className='text-sm font-semibold tracking-wider text-muted-foreground uppercase'>
+              Design Configurations
+            </h4>
+          </div>
+          <div className='space-y-3'>
+            {lead.designConfigurations.map((dc, idx) => (
+              <DesignConfigCard key={dc._id ?? idx} dc={dc} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mooring Technique */}
+      {lead.mooringTechnique && (
+        <div>
+          <div className='mb-4 flex items-center gap-2'>
+            <Anchor className='h-4 w-4 text-primary' />
+            <h4 className='text-sm font-semibold tracking-wider text-muted-foreground uppercase'>
+              Mooring Technique
+            </h4>
+          </div>
+          <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
+            <DetailItem
+              label='Type of Mooring'
+              value={lead.mooringTechnique.typeOfMooring}
+            />
+            <DetailItem
+              label='Method of Mooring'
+              value={lead.mooringTechnique.methodOfMooring}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Offered Price Breakdown */}
+      {lead.offeredPrice && (
+        <div>
+          <div className='mb-4 flex items-center gap-2'>
+            <DollarSign className='h-4 w-4 text-primary' />
+            <h4 className='text-sm font-semibold tracking-wider text-muted-foreground uppercase'>
+              Offered Price Breakdown
+              {currency && (
+                <span className='ml-2 text-xs font-normal text-muted-foreground'>
+                  ({currency})
+                </span>
+              )}
+            </h4>
+          </div>
+          <div className='grid grid-cols-2 gap-4 md:grid-cols-5'>
+            <DetailItem
+              label='Floating System'
+              value={lead.offeredPrice.floatingSystem?.toLocaleString() ?? '—'}
+            />
+            <DetailItem
+              label='Anchoring & Mooring'
+              value={
+                lead.offeredPrice.anchoringMooringSystem?.toLocaleString() ??
+                '—'
+              }
+            />
+            <DetailItem
+              label='Supervision'
+              value={lead.offeredPrice.supervision?.toLocaleString() ?? '—'}
+            />
+            <DetailItem
+              label='DC Installation'
+              value={lead.offeredPrice.dcInstallation?.toLocaleString() ?? '—'}
+            />
+            <DetailItem
+              label='Total'
+              value={lead.offeredPrice.total?.toLocaleString() ?? '—'}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   Main Table Component
+───────────────────────────────────────── */
 
 export function LeadsTable() {
   const search = route.useSearch()
@@ -61,6 +200,7 @@ export function LeadsTable() {
   const [rowSelection, setRowSelection] = useState({})
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [expanded, setExpanded] = useState<ExpandedState>({})
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const bulkDeleteMutation = useBulkDeleteLeadsMutation()
@@ -95,6 +235,7 @@ export function LeadsTable() {
       columnFilters,
       globalFilter,
       pagination,
+      expanded,
     },
     enableRowSelection: true,
     manualPagination: true,
@@ -103,7 +244,9 @@ export function LeadsTable() {
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onPaginationChange,
     onGlobalFilterChange,
@@ -192,6 +335,7 @@ export function LeadsTable() {
                 <Fragment key={row.id}>
                   <TableRow
                     data-state={row.getIsSelected() && 'selected'}
+                    onClick={() => row.toggleExpanded()}
                     className='cursor-pointer transition-colors hover:bg-muted/50'
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -210,6 +354,16 @@ export function LeadsTable() {
                       </TableCell>
                     ))}
                   </TableRow>
+                  {row.getIsExpanded() && (
+                    <TableRow className='bg-muted/30 hover:bg-muted/30'>
+                      <TableCell
+                        colSpan={row.getVisibleCells().length}
+                        className='p-0'
+                      >
+                        <LeadExpandedRow lead={row.original} />
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </Fragment>
               ))
             ) : (

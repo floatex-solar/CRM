@@ -1,29 +1,29 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import * as siteController from "../controllers/site.controller.js";
 
 const router = express.Router();
 
-// Ensure upload directory exists
-const uploadDir = path.join(process.cwd(), "public/uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Multer: memory storage for Drive upload (no disk writes)
+const storage = multer.memoryStorage();
 
-// Multer Config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
+const ALLOWED_MIMETYPES = ["application/pdf", "image/png", "image/jpeg"];
+
+const upload = multer({
+  storage,
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          `Unsupported file type: ${file.mimetype}. Only PDF, PNG, and JPG are allowed.`,
+        ),
+      );
+    }
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + "-" + file.originalname);
-  },
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB max
 });
-
-const upload = multer({ storage: storage });
 
 const uploadFields = upload.fields([
   { name: "bathymetryFile", maxCount: 1 },

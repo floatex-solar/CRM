@@ -78,21 +78,21 @@ export function NavUser({ user }: NavUserProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuGroup>
+              {/* <DropdownMenuGroup>
                 <DropdownMenuItem>
                   <Sparkles />
                   Upgrade to Pro
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
+              <DropdownMenuSeparator /> */}
+              {/* <DropdownMenuGroup> */}
+              {/* <DropdownMenuItem asChild>
                   <Link to='/settings/account'>
                     <BadgeCheck />
                     Account
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                </DropdownMenuItem> */}
+              {/* <DropdownMenuItem asChild>
                   <Link to='/settings'>
                     <CreditCard />
                     Billing
@@ -103,9 +103,9 @@ export function NavUser({ user }: NavUserProps) {
                     <Bell />
                     Notifications
                   </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+                </DropdownMenuItem> */}
+              {/* </DropdownMenuGroup> */}
+              {/* <DropdownMenuSeparator /> */}
               <DropdownMenuItem
                 variant='destructive'
                 onClick={() => setOpen(true)}

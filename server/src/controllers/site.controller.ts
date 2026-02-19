@@ -2,7 +2,74 @@ import { Request, Response, NextFunction } from "express";
 import { SiteModel } from "../models/site.model.js";
 import catchAsync from "../utils/catchAsync.js";
 import { AppError } from "../utils/appError.js";
+import { uploadFileToDrive } from "../services/upload-to-drive.js";
 import { IReportFile } from "../types/site.types.js";
+
+/* =========================================================
+   Helpers
+========================================================= */
+
+const FILE_FIELD_NAMES = [
+  "bathymetryFile",
+  "geotechnicalFile",
+  "pfrFile",
+  "dprFile",
+] as const;
+
+type FileFieldName = (typeof FILE_FIELD_NAMES)[number];
+
+/**
+ * Uploads all provided Multer files to Google Drive and returns
+ * a partial record mapping field names to their IReportFile data.
+ */
+async function processFileUploads(
+  files: { [fieldname: string]: Express.Multer.File[] } | undefined,
+): Promise<Partial<Record<FileFieldName, IReportFile>>> {
+  if (!files) return {};
+
+  const fileData: Partial<Record<FileFieldName, IReportFile>> = {};
+
+  const uploadPromises = FILE_FIELD_NAMES.filter(
+    (name) => files[name]?.[0],
+  ).map(async (name) => {
+    const file = files[name]![0]!;
+
+    const driveUrl = await uploadFileToDrive({
+      fileBuffer: file.buffer,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+    });
+
+    fileData[name] = {
+      originalName: file.originalname,
+      encoding: file.encoding,
+      mimetype: file.mimetype,
+      filename: file.originalname,
+      path: driveUrl, // Store Drive URL in the path field
+      size: file.size,
+    };
+  });
+
+  await Promise.all(uploadPromises);
+  return fileData;
+}
+
+/** Coerces form-data string booleans to actual booleans. */
+function parseBooleans(body: Record<string, unknown>): void {
+  const booleanFields = [
+    "bathymetryAvailable",
+    "geotechnicalReportAvailable",
+    "pfrAvailable",
+    "dprAvailable",
+    "possibilityForPondGettingEmpty",
+  ];
+
+  for (const field of booleanFields) {
+    if (body[field] !== undefined) {
+      body[field] = body[field] === "true";
+    }
+  }
+}
 
 /* =========================================================
    SITE CRUD
@@ -12,66 +79,11 @@ import { IReportFile } from "../types/site.types.js";
 // Create Site
 // ─────────────────────────────────────────
 export const createSite = catchAsync(async (req: Request, res: Response) => {
-  // Handle files
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const fileData = await processFileUploads(files);
 
-  const fileData: Partial<Record<string, IReportFile>> = {};
-
-  if (files) {
-    if (files.bathymetryFile?.[0]) {
-      fileData.bathymetryFile = {
-        originalName: files.bathymetryFile[0].originalname,
-        encoding: files.bathymetryFile[0].encoding,
-        mimetype: files.bathymetryFile[0].mimetype,
-        filename: files.bathymetryFile[0].filename,
-        path: files.bathymetryFile[0].path,
-        size: files.bathymetryFile[0].size,
-      };
-    }
-    if (files.geotechnicalFile?.[0]) {
-      fileData.geotechnicalFile = {
-        originalName: files.geotechnicalFile[0].originalname,
-        encoding: files.geotechnicalFile[0].encoding,
-        mimetype: files.geotechnicalFile[0].mimetype,
-        filename: files.geotechnicalFile[0].filename,
-        path: files.geotechnicalFile[0].path,
-        size: files.geotechnicalFile[0].size,
-      };
-    }
-    if (files.pfrFile?.[0]) {
-      fileData.pfrFile = {
-        originalName: files.pfrFile[0].originalname,
-        encoding: files.pfrFile[0].encoding,
-        mimetype: files.pfrFile[0].mimetype,
-        filename: files.pfrFile[0].filename,
-        path: files.pfrFile[0].path,
-        size: files.pfrFile[0].size,
-      };
-    }
-    if (files.dprFile?.[0]) {
-      fileData.dprFile = {
-        originalName: files.dprFile[0].originalname,
-        encoding: files.dprFile[0].encoding,
-        mimetype: files.dprFile[0].mimetype,
-        filename: files.dprFile[0].filename,
-        path: files.dprFile[0].path,
-        size: files.dprFile[0].size,
-      };
-    }
-  }
-
-  const siteData = {
-    ...req.body,
-    ...fileData,
-    // Ensure booleans are correctly parsed from form-data strings
-    bathymetryAvailable: req.body.bathymetryAvailable === "true",
-    geotechnicalReportAvailable:
-      req.body.geotechnicalReportAvailable === "true",
-    pfrAvailable: req.body.pfrAvailable === "true",
-    dprAvailable: req.body.dprAvailable === "true",
-    possibilityForPondGettingEmpty:
-      req.body.possibilityForPondGettingEmpty === "true",
-  };
+  const siteData = { ...req.body, ...fileData };
+  parseBooleans(siteData);
 
   const site = await SiteModel.create(siteData);
 
@@ -92,12 +104,10 @@ export const getAllSites = catchAsync(async (req: Request, res: Response) => {
     baseFilter.name = { $regex: req.query.search, $options: "i" };
   }
 
-  // Filter by Owner (Company ID)
   if (req.query.owner) {
     baseFilter.owner = req.query.owner;
   }
 
-  // Filter by Country
   if (req.query.country) {
     baseFilter.country = req.query.country;
   }
@@ -116,7 +126,7 @@ export const getAllSites = catchAsync(async (req: Request, res: Response) => {
     .sort(sortBy)
     .skip(skip)
     .limit(limit)
-    .populate("owner", "name") // Populate owner name
+    .populate("owner", "name")
     .select("-__v");
 
   res.status(200).json({
@@ -153,72 +163,11 @@ export const getSite = catchAsync(
 // ─────────────────────────────────────────
 export const updateSite = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // Handle files similar to create
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    const fileData: Partial<Record<string, IReportFile>> = {};
+    const fileData = await processFileUploads(files);
 
-    if (files) {
-      if (files.bathymetryFile?.[0]) {
-        fileData.bathymetryFile = {
-          originalName: files.bathymetryFile[0].originalname,
-          encoding: files.bathymetryFile[0].encoding,
-          mimetype: files.bathymetryFile[0].mimetype,
-          filename: files.bathymetryFile[0].filename,
-          path: files.bathymetryFile[0].path,
-          size: files.bathymetryFile[0].size,
-        };
-      }
-      if (files.geotechnicalFile?.[0]) {
-        fileData.geotechnicalFile = {
-          originalName: files.geotechnicalFile[0].originalname,
-          encoding: files.geotechnicalFile[0].encoding,
-          mimetype: files.geotechnicalFile[0].mimetype,
-          filename: files.geotechnicalFile[0].filename,
-          path: files.geotechnicalFile[0].path,
-          size: files.geotechnicalFile[0].size,
-        };
-      }
-      if (files.pfrFile?.[0]) {
-        fileData.pfrFile = {
-          originalName: files.pfrFile[0].originalname,
-          encoding: files.pfrFile[0].encoding,
-          mimetype: files.pfrFile[0].mimetype,
-          filename: files.pfrFile[0].filename,
-          path: files.pfrFile[0].path,
-          size: files.pfrFile[0].size,
-        };
-      }
-      if (files.dprFile?.[0]) {
-        fileData.dprFile = {
-          originalName: files.dprFile[0].originalname,
-          encoding: files.dprFile[0].encoding,
-          mimetype: files.dprFile[0].mimetype,
-          filename: files.dprFile[0].filename,
-          path: files.dprFile[0].path,
-          size: files.dprFile[0].size,
-        };
-      }
-    }
-
-    const updateData = {
-      ...req.body,
-      ...fileData,
-    };
-
-    // Handle boolean conversions if they are present in the body
-    if (updateData.bathymetryAvailable !== undefined)
-      updateData.bathymetryAvailable =
-        updateData.bathymetryAvailable === "true";
-    if (updateData.geotechnicalReportAvailable !== undefined)
-      updateData.geotechnicalReportAvailable =
-        updateData.geotechnicalReportAvailable === "true";
-    if (updateData.pfrAvailable !== undefined)
-      updateData.pfrAvailable = updateData.pfrAvailable === "true";
-    if (updateData.dprAvailable !== undefined)
-      updateData.dprAvailable = updateData.dprAvailable === "true";
-    if (updateData.possibilityForPondGettingEmpty !== undefined)
-      updateData.possibilityForPondGettingEmpty =
-        updateData.possibilityForPondGettingEmpty === "true";
+    const updateData = { ...req.body, ...fileData };
+    parseBooleans(updateData);
 
     const site = await SiteModel.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

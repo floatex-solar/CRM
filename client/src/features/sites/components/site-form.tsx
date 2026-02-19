@@ -52,6 +52,8 @@ export function SiteForm({ initialData, onSubmit, isPending }: SiteFormProps) {
       maxWaterLevel: initialData?.maxWaterLevel ?? '',
       minDrawDownLevel: initialData?.minDrawDownLevel ?? '',
       fullReservoirLevel: initialData?.fullReservoirLevel ?? '',
+      waterLevelVariation: initialData?.waterLevelVariation ?? '',
+      fetchOfReservoir: initialData?.fetchOfReservoir ?? '',
       waveHeight: initialData?.waveHeight ?? '',
       waterCurrent: initialData?.waterCurrent ?? '',
 
@@ -82,8 +84,7 @@ export function SiteForm({ initialData, onSubmit, isPending }: SiteFormProps) {
     () =>
       getAllCountries().map((c) => ({
         label: c.name,
-        value: c.isoCode, // Storing ISO code or Name? User said "same as Companies". Companies stores name or iso?
-        // In company form: `value: c.isoCode`. So we store ISO Code.
+        value: c.name,
       })),
     []
   )
@@ -94,16 +95,11 @@ export function SiteForm({ initialData, onSubmit, isPending }: SiteFormProps) {
 
   const renderFileLink = (file?: { path: string; originalName: string }) => {
     if (!file) return null
-    // Assuming file.path is relative or absolute on server.
-    // We configured static serving at /uploads.
-    // If backend stores full path, we might need to strip it or just use filename.
-    // Our implementation stores full path. We should probably adjust backend to return a URL or just filename.
-    // But for now, let's assume we can construct it or just show the name.
-    // Actually, backend stores `path`. If it's absolute, client can't access it.
-    // We exposed /uploads, so we should map it.
-    // For now, simpler to just show "View uploaded file" if we can guess the URL, or just show name.
-    const filename = file.path.split(/[/\\]/).pop() // Extract filename
-    const url = `${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${filename}`
+
+    // Drive URLs are stored directly; legacy local paths need construction
+    const url = file.path.startsWith('http')
+      ? file.path
+      : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${file.path.split(/[/\\]/).pop()}`
 
     return (
       <div className='mt-1 flex items-center gap-2'>
@@ -128,421 +124,451 @@ export function SiteForm({ initialData, onSubmit, isPending }: SiteFormProps) {
         onSubmit={form.handleSubmit(handleFormSubmit as any)}
         className='space-y-6'
       >
-        <Card>
-          <CardHeader>
-            <CardTitle>Site Details</CardTitle>
-          </CardHeader>
-          <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-            <FormField
-              control={form.control}
-              name='name'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name of Site</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Site Name' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <fieldset disabled={isPending} className='space-y-6'>
+          <Card>
+            <CardHeader>
+              <CardTitle>Site Details</CardTitle>
+            </CardHeader>
+            <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+              <FormField
+                control={form.control}
+                name='name'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name of Site</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Site Name' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name='owner'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Owner (Company)</FormLabel>
-                  <SearchableSelect
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={companyOptions}
-                    placeholder='Select Owner'
-                    allowCreate={false}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='country'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <SearchableSelect
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={countryOptions}
-                    allowCreate={false}
-                    placeholder='Select Country'
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='locationLat'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location Lat</FormLabel>
-                  <FormControl>
-                    <Input type='number' step='any' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='locationLng'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location Lng</FormLabel>
-                  <FormControl>
-                    <Input type='number' step='any' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Technical Characteristics</CardTitle>
-          </CardHeader>
-          <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-            <FormField
-              control={form.control}
-              name='typeOfWaterBody'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type of Water Body</FormLabel>
-                  <SearchableSelect
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={waterBodyLookup.options}
-                    onCreate={waterBodyLookup.createOption}
-                    onEdit={waterBodyLookup.updateOption}
-                    onDelete={waterBodyLookup.deleteOption}
-                    isPending={waterBodyLookup.isLoading}
-                    allowCreate
-                    placeholder='Select Type'
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='useOfWater'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Use of Water</FormLabel>
-                  <SearchableSelect
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={waterUseLookup.options}
-                    onCreate={waterUseLookup.createOption}
-                    onEdit={waterUseLookup.updateOption}
-                    onDelete={waterUseLookup.deleteOption}
-                    isPending={waterUseLookup.isLoading}
-                    allowCreate
-                    placeholder='Select Use'
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='waterArea'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Water Area (sqmt)</FormLabel>
-                  <FormControl>
-                    <Input type='number' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='windSpeed'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Wind Speed (m/s)</FormLabel>
-                  <FormControl>
-                    <Input type='number' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='maxWaterLevel'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Maximum Water Level</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='minDrawDownLevel'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Min Draw Down Level</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='fullReservoirLevel'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Reservoir Level</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='waveHeight'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Wave Height</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='waterCurrent'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Water Current</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='possibilityForPondGettingEmpty'
-              render={({ field }) => (
-                <FormItem className='flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4'>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
+              <FormField
+                control={form.control}
+                name='owner'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Owner (Company)</FormLabel>
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={companyOptions}
+                      placeholder='Select Owner'
+                      allowCreate={false}
                     />
-                  </FormControl>
-                  <div className='space-y-1 leading-none'>
-                    <FormLabel>Possibility for pond getting empty?</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        {/* Uploads Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Input Data Available</CardTitle>
-          </CardHeader>
-          <CardContent className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            {/* Bathymetry */}
-            <div className='space-y-4 rounded-lg border p-4'>
               <FormField
                 control={form.control}
-                name='bathymetryAvailable'
+                name='country'
                 render={({ field }) => (
-                  <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={countryOptions}
+                      allowCreate={false}
+                      allowEdit={false}
+                      allowDelete={false}
+                      placeholder='Select Country'
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='locationLat'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location Lat</FormLabel>
+                    <FormControl>
+                      <Input type='number' step='any' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='locationLng'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location Lng</FormLabel>
+                    <FormControl>
+                      <Input type='number' step='any' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Technical Characteristics</CardTitle>
+            </CardHeader>
+            <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+              <FormField
+                control={form.control}
+                name='typeOfWaterBody'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type of Water Body</FormLabel>
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={waterBodyLookup.options}
+                      onCreate={waterBodyLookup.createOption}
+                      onEdit={waterBodyLookup.updateOption}
+                      onDelete={waterBodyLookup.deleteOption}
+                      isPending={waterBodyLookup.isLoading}
+                      allowCreate
+                      placeholder='Select Type'
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='useOfWater'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Use of Water</FormLabel>
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={waterUseLookup.options}
+                      onCreate={waterUseLookup.createOption}
+                      onEdit={waterUseLookup.updateOption}
+                      onDelete={waterUseLookup.deleteOption}
+                      isPending={waterUseLookup.isLoading}
+                      allowCreate
+                      placeholder='Select Use'
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='waterArea'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Water Area (sqmt)</FormLabel>
+                    <FormControl>
+                      <Input type='number' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='windSpeed'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Wind Speed (m/s)</FormLabel>
+                    <FormControl>
+                      <Input type='number' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='maxWaterLevel'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Maximum Water Level</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='minDrawDownLevel'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Min Draw Down Level</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fullReservoirLevel'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Reservoir Level</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='waterLevelVariation'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Water Level Variation</FormLabel>
+                    <FormControl>
+                      <Input placeholder='e.g. 2-5m seasonal' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='fetchOfReservoir'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fetch of the Reservoir</FormLabel>
+                    <FormControl>
+                      <Input placeholder='e.g. 3km' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='waveHeight'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Wave Height</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='waterCurrent'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Water Current</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='possibilityForPondGettingEmpty'
+                render={({ field }) => (
+                  <FormItem className='flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4'>
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel>Bathymetry Survey</FormLabel>
+                    <div className='space-y-1 leading-none'>
+                      <FormLabel>Possibility for pond getting empty?</FormLabel>
+                    </div>
                   </FormItem>
                 )}
               />
-              {form.watch('bathymetryAvailable') && (
+            </CardContent>
+          </Card>
+
+          {/* Uploads Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Input Data Available</CardTitle>
+            </CardHeader>
+            <CardContent className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+              {/* Bathymetry */}
+              <div className='space-y-4 rounded-lg border p-4'>
                 <FormField
                   control={form.control}
-                  name='bathymetryFile'
+                  name='bathymetryAvailable'
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
                       <FormControl>
-                        <Input
-                          type='file'
-                          accept='.pdf,.doc,.docx,.jpg,.png'
-                          onChange={(e) => field.onChange(e.target.files)}
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      {initialData?.bathymetryFile &&
-                        renderFileLink(initialData.bathymetryFile)}
-                      <FormMessage />
+                      <FormLabel>Bathymetry Survey</FormLabel>
                     </FormItem>
                   )}
                 />
-              )}
-            </div>
-
-            {/* Geotechnical */}
-            <div className='space-y-4 rounded-lg border p-4'>
-              <FormField
-                control={form.control}
-                name='geotechnicalReportAvailable'
-                render={({ field }) => (
-                  <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>Geotechnical Report</FormLabel>
-                  </FormItem>
+                {form.watch('bathymetryAvailable') && (
+                  <FormField
+                    control={form.control}
+                    name='bathymetryFile'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type='file'
+                            accept='.pdf,.png,.jpg,.jpeg'
+                            onChange={(e) => field.onChange(e.target.files)}
+                          />
+                        </FormControl>
+                        {initialData?.bathymetryFile &&
+                          renderFileLink(initialData.bathymetryFile)}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-              {form.watch('geotechnicalReportAvailable') && (
+              </div>
+
+              {/* Geotechnical */}
+              <div className='space-y-4 rounded-lg border p-4'>
                 <FormField
                   control={form.control}
-                  name='geotechnicalFile'
+                  name='geotechnicalReportAvailable'
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
                       <FormControl>
-                        <Input
-                          type='file'
-                          accept='.pdf,.doc,.docx,.jpg,.png'
-                          onChange={(e) => field.onChange(e.target.files)}
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      {initialData?.geotechnicalFile &&
-                        renderFileLink(initialData.geotechnicalFile)}
-                      <FormMessage />
+                      <FormLabel>Geotechnical Report</FormLabel>
                     </FormItem>
                   )}
                 />
-              )}
-            </div>
-
-            {/* PFR */}
-            <div className='space-y-4 rounded-lg border p-4'>
-              <FormField
-                control={form.control}
-                name='pfrAvailable'
-                render={({ field }) => (
-                  <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>PFR</FormLabel>
-                  </FormItem>
+                {form.watch('geotechnicalReportAvailable') && (
+                  <FormField
+                    control={form.control}
+                    name='geotechnicalFile'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type='file'
+                            accept='.pdf,.png,.jpg,.jpeg'
+                            onChange={(e) => field.onChange(e.target.files)}
+                          />
+                        </FormControl>
+                        {initialData?.geotechnicalFile &&
+                          renderFileLink(initialData.geotechnicalFile)}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-              {form.watch('pfrAvailable') && (
+              </div>
+
+              {/* PFR */}
+              <div className='space-y-4 rounded-lg border p-4'>
                 <FormField
                   control={form.control}
-                  name='pfrFile'
+                  name='pfrAvailable'
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
                       <FormControl>
-                        <Input
-                          type='file'
-                          accept='.pdf,.doc,.docx,.jpg,.png'
-                          onChange={(e) => field.onChange(e.target.files)}
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      {initialData?.pfrFile &&
-                        renderFileLink(initialData.pfrFile)}
-                      <FormMessage />
+                      <FormLabel>PFR</FormLabel>
                     </FormItem>
                   )}
                 />
-              )}
-            </div>
-
-            {/* DPR */}
-            <div className='space-y-4 rounded-lg border p-4'>
-              <FormField
-                control={form.control}
-                name='dprAvailable'
-                render={({ field }) => (
-                  <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>DPR</FormLabel>
-                  </FormItem>
+                {form.watch('pfrAvailable') && (
+                  <FormField
+                    control={form.control}
+                    name='pfrFile'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type='file'
+                            accept='.pdf,.png,.jpg,.jpeg'
+                            onChange={(e) => field.onChange(e.target.files)}
+                          />
+                        </FormControl>
+                        {initialData?.pfrFile &&
+                          renderFileLink(initialData.pfrFile)}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-              {form.watch('dprAvailable') && (
+              </div>
+
+              {/* DPR */}
+              <div className='space-y-4 rounded-lg border p-4'>
                 <FormField
                   control={form.control}
-                  name='dprFile'
+                  name='dprAvailable'
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className='flex flex-row items-center space-y-0 space-x-2'>
                       <FormControl>
-                        <Input
-                          type='file'
-                          accept='.pdf,.doc,.docx,.jpg,.png'
-                          onChange={(e) => field.onChange(e.target.files)}
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      {initialData?.dprFile &&
-                        renderFileLink(initialData.dprFile)}
-                      <FormMessage />
+                      <FormLabel>DPR</FormLabel>
                     </FormItem>
                   )}
                 />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                {form.watch('dprAvailable') && (
+                  <FormField
+                    control={form.control}
+                    name='dprFile'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type='file'
+                            accept='.pdf,.png,.jpg,.jpeg'
+                            onChange={(e) => field.onChange(e.target.files)}
+                          />
+                        </FormControl>
+                        {initialData?.dprFile &&
+                          renderFileLink(initialData.dprFile)}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className='flex justify-end'>
-          <Button type='submit' disabled={isPending} size='lg'>
-            {isPending ? 'Saving...' : 'Save Site'}
-          </Button>
-        </div>
+          <div className='flex justify-end'>
+            <Button type='submit' disabled={isPending} size='lg'>
+              {isPending ? 'Saving...' : 'Save Site'}
+            </Button>
+          </div>
+        </fieldset>
       </form>
     </Form>
   )
