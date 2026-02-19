@@ -132,7 +132,8 @@ export const updateMe = catchAsync(
     allowedUpdates.forEach((field) => {
       const value = (req.body as Partial<IUser>)[field];
       if (value !== undefined) {
-        filteredBody[field] = value;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        filteredBody[field] = value as any;
       }
     });
 

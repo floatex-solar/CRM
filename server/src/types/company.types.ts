@@ -41,6 +41,7 @@ export interface IContact {
   phone?: string;
   designation?: string;
   role?: ContactRole; // 👈 replaces isPrimary
+  _id?: string;
 }
 
 export interface IAgreement {

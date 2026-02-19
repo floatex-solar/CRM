@@ -3,7 +3,15 @@ import { Readable } from "stream";
 import { authManager } from "../utils/google-auth-manager.js";
 import appConfig from "../config/appConfig.js";
 
-export async function uploadFileToDrive({ fileBuffer, fileName, mimeType }) {
+export async function uploadFileToDrive({
+  fileBuffer,
+  fileName,
+  mimeType,
+}: {
+  fileBuffer: Buffer;
+  fileName: string;
+  mimeType?: string;
+}) {
   const drive = google.drive({
     version: "v3",
     auth: authManager.getAuth(),
@@ -25,6 +33,10 @@ export async function uploadFileToDrive({ fileBuffer, fileName, mimeType }) {
       body: stream,
     },
   });
+
+  if (!res.data.id) {
+    throw new Error("Failed to upload file to Drive");
+  }
 
   // 2. Make it public (anyone with link)
   await drive.permissions.create({

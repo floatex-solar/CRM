@@ -21,16 +21,23 @@ export const createLookup = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Get all lookups by type
-export const getLookupsByType = catchAsync(async (req: Request, res: Response) => {
-  const { type } = req.params;
-  const lookups = await LookupModel.find({ type: type.toUpperCase() }).sort("label");
+export const getLookupsByType = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { type } = req.params;
+    if (!type) {
+      return next(new AppError("Please provide a type", 400));
+    }
+    const lookups = await LookupModel.find({
+      type: (type as string).toUpperCase(),
+    }).sort("label");
 
-  res.status(200).json({
-    status: "success",
-    results: lookups.length,
-    data: { lookups },
-  });
-});
+    res.status(200).json({
+      status: "success",
+      results: lookups.length,
+      data: { lookups },
+    });
+  },
+);
 
 // Update lookup
 export const updateLookup = catchAsync(
@@ -42,7 +49,7 @@ export const updateLookup = catchAsync(
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     if (!lookup) {
@@ -53,7 +60,7 @@ export const updateLookup = catchAsync(
       status: "success",
       data: { lookup },
     });
-  }
+  },
 );
 
 // Delete lookup
@@ -69,5 +76,5 @@ export const deleteLookup = catchAsync(
       status: "success",
       data: null,
     });
-  }
+  },
 );

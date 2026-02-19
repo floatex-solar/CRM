@@ -3,19 +3,31 @@ import appConfig from "../config/appConfig.js";
 
 const { GOOGLE_SERVICE_ACCOUNT_BASE64 } = appConfig;
 
-function decodeCredentials(base64) {
+interface GoogleServiceAccountCredentials {
+  client_email: string;
+  private_key: string;
+  [key: string]: unknown;
+}
+
+function decodeCredentials(base64: string): GoogleServiceAccountCredentials {
   const json = Buffer.from(base64, "base64").toString("utf8");
-  const creds = JSON.parse(json);
+  const creds = JSON.parse(json) as GoogleServiceAccountCredentials;
 
   if (!creds.client_email || !creds.private_key) {
     throw new Error("Invalid service account credentials");
   }
+
   return creds;
 }
 
 class AuthManager {
-  constructor(accounts) {
+  private accounts: GoogleServiceAccountCredentials[];
+  private authClients: GoogleAuth[];
+  private currentIndex: number;
+
+  constructor(accounts: string[]) {
     this.accounts = accounts.map(decodeCredentials);
+
     this.authClients = this.accounts.map(
       (credentials) =>
         new GoogleAuth({
@@ -26,14 +38,19 @@ class AuthManager {
           ],
         }),
     );
+
     this.currentIndex = 0;
   }
 
-  getAuth() {
-    return this.authClients[this.currentIndex];
+  getAuth(): GoogleAuth {
+    const client = this.authClients[this.currentIndex];
+    if (!client) {
+      throw new Error("No auth client available");
+    }
+    return client;
   }
 
-  rotate() {
+  rotate(): boolean {
     if (this.authClients.length <= 1) return false;
     this.currentIndex = (this.currentIndex + 1) % this.authClients.length;
     return true;

@@ -180,7 +180,9 @@ export const updateContact = catchAsync(
     const company = await CompanyModel.findById(companyId);
     if (!company) return next(new AppError("Company not found", 404));
 
-    const contact = company.contacts.id(contactId);
+    const contact = company.contacts.find(
+      (c) => c._id?.toString() === contactId,
+    );
     if (!contact) return next(new AppError("Contact not found", 404));
 
     Object.assign(contact, req.body);
@@ -198,15 +200,15 @@ export const deleteContact = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { companyId, contactId } = req.params;
 
-    const company = await CompanyModel.findById(companyId);
+    const company = await CompanyModel.findByIdAndUpdate(
+      companyId,
+      {
+        $pull: { contacts: { _id: contactId } },
+      },
+      { new: true },
+    );
+
     if (!company) return next(new AppError("Company not found", 404));
-
-    const contact = company.contacts.id(contactId);
-    if (!contact) return next(new AppError("Contact not found", 404));
-
-    contact.deleteOne();
-
-    await company.save();
 
     res.status(204).json({
       status: "success",
