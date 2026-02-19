@@ -11,7 +11,7 @@ interface LoginCredentials {
 }
 
 interface Url {
-  lable: string
+  label: string
   value: string
   _id: string
 }
@@ -24,7 +24,7 @@ interface LoginResponse {
       _id: string
       name?: string
       email: string
-      role: string | string[] // backend sends string, but your store expects array
+      role: string
       photo?: string
       urls: Url[]
       createdAt?: string
@@ -56,17 +56,17 @@ export function useLogin(redirectTo?: string) {
 
       console.log(user)
 
+      setAccessToken(data.token)
+
       setUser({
         _id: user._id,
         name: user.name ?? '',
         email: user.email,
-        role: typeof user.role === 'string' ? [user.role] : user.role,
+        role: user.role,
         photo: user.photo,
         urls: user.urls,
         exp: Date.now() + 24 * 60 * 60 * 1000,
       })
-
-      setAccessToken(data.token)
 
       toast.success('Login successful', {
         description: `Welcome back, ${user.name || user.email}!`,

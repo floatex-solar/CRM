@@ -10,7 +10,7 @@ import {
 export function TeamSwitcher() {
   const user = useAuthStore((s) => s.auth.user)
   const displayName = user?.name || 'Floatex CRM'
-  const role = user?.role?.[0] ?? 'user'
+  const role = user?.role ?? 'user'
 
   return (
     <SidebarMenu>

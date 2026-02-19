@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth-store'
 import api from '@/lib/axios'
@@ -9,7 +10,7 @@ interface UserProfile {
   role: string
   photo?: string
   bio?: string
-  urls?: { label: string; value: string }[]
+  urls?: { label: string; value: string; _id: string }[]
 }
 
 interface MeResponse {
@@ -23,26 +24,31 @@ export function useCurrentUser() {
     auth: { isAuthenticated, setUser },
   } = useAuthStore()
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const { data } = await api.get<MeResponse>('/users/me')
-      const user = data.data.user
-
-      // Sync profile fields into auth store
-      setUser({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: [user.role],
-        photo: user.photo,
-        bio: user.bio,
-        urls: user.urls,
-      })
-
-      return user
+      return data.data.user
     },
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
+
+  // Sync profile fields into auth store whenever data changes
+  const user = query.data
+  useEffect(() => {
+    if (user) {
+      setUser({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        photo: user.photo,
+        bio: user.bio,
+        urls: user.urls,
+      })
+    }
+  }, [user, setUser])
+
+  return query
 }

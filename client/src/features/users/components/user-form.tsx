@@ -26,7 +26,7 @@ const baseSchema = z.object({
   role: z.enum(['admin', 'user']).default('user'),
   bio: z.string().max(300).optional().default(''),
   urls: z
-    .array(z.object({ label: z.string().min(1), value: z.string().url() }))
+    .array(z.object({ label: z.string(), value: z.string() }))
     .optional()
     .default([]),
 })

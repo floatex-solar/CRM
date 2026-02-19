@@ -18,7 +18,7 @@ export const userSchemaZod = z
     photo: z.string().url().optional().or(z.literal("")),
     bio: z.string().max(300).optional().default(""),
     urls: z
-      .array(z.object({ label: z.string(), value: z.string().url() }))
+      .array(z.object({ label: z.string(), value: z.string() }))
       .optional()
       .default([]),
     password: z.string().min(8, "Password must be at least 8 characters"),
