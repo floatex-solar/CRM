@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
 import { type Task } from '../data/schema'
 
-type TasksDialogType = 'create' | 'update' | 'delete' | 'import'
+type TasksDialogType = 'add' | 'edit' | 'delete' | 'detail'
 
 type TasksContextType = {
   open: TasksDialogType | null
@@ -29,7 +29,7 @@ export const useTasks = () => {
   const tasksContext = React.useContext(TasksContext)
 
   if (!tasksContext) {
-    throw new Error('useTasks has to be used within <TasksContext>')
+    throw new Error('useTasks has to be used within <TasksProvider>')
   }
 
   return tasksContext

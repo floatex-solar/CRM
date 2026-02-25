@@ -7,6 +7,8 @@ import companyRoutes from "./company.routes.js";
 import leadRoutes from "./lead.routes.js";
 import lookupRoutes from "./lookup.routes.js";
 import { siteRoutes } from "./site.routes.js";
+import taskRoutes from "./task.routes.js";
+import notificationRoutes from "./notification.routes.js";
 
 // ✅ Create Router Instance
 const router: Router = Router();
@@ -20,6 +22,8 @@ router.use("/companies", companyRoutes);
 router.use("/leads", leadRoutes);
 router.use("/lookups", lookupRoutes);
 router.use("/sites", siteRoutes);
+router.use("/tasks", taskRoutes);
+router.use("/notifications", notificationRoutes);
 // router.use("/profile", profileRoutes);
 
 export default router;

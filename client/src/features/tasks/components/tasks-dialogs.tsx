@@ -1,69 +1,50 @@
-import { showSubmittedData } from '@/lib/show-submitted-data'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import { TasksImportDialog } from './tasks-import-dialog'
-import { TasksMutateDrawer } from './tasks-mutate-drawer'
+import { TaskAddDialog } from './task-add-dialog'
+import { TaskDeleteDialog } from './task-delete-dialog'
+import { TaskDetailDialog } from './task-detail-dialog'
+import { TaskEditDialog } from './task-edit-dialog'
 import { useTasks } from './tasks-provider'
 
 export function TasksDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useTasks()
+
   return (
     <>
-      <TasksMutateDrawer
-        key='task-create'
-        open={open === 'create'}
-        onOpenChange={() => setOpen('create')}
-      />
-
-      <TasksImportDialog
-        key='tasks-import'
-        open={open === 'import'}
-        onOpenChange={() => setOpen('import')}
+      <TaskAddDialog
+        key='task-add'
+        open={open === 'add'}
+        onOpenChange={() => setOpen('add')}
       />
 
       {currentRow && (
         <>
-          <TasksMutateDrawer
-            key={`task-update-${currentRow.id}`}
-            open={open === 'update'}
+          <TaskEditDialog
+            key={`task-edit-${currentRow._id}`}
+            open={open === 'edit'}
             onOpenChange={() => {
-              setOpen('update')
-              setTimeout(() => {
-                setCurrentRow(null)
-              }, 500)
+              setOpen('edit')
+              setTimeout(() => setCurrentRow(null), 500)
             }}
             currentRow={currentRow}
           />
 
-          <ConfirmDialog
-            key='task-delete'
-            destructive
+          <TaskDeleteDialog
+            key={`task-delete-${currentRow._id}`}
             open={open === 'delete'}
             onOpenChange={() => {
               setOpen('delete')
-              setTimeout(() => {
-                setCurrentRow(null)
-              }, 500)
+              setTimeout(() => setCurrentRow(null), 500)
             }}
-            handleConfirm={() => {
-              setOpen(null)
-              setTimeout(() => {
-                setCurrentRow(null)
-              }, 500)
-              showSubmittedData(
-                currentRow,
-                'The following task has been deleted:'
-              )
+            currentRow={currentRow}
+          />
+
+          <TaskDetailDialog
+            key={`task-detail-${currentRow._id}`}
+            open={open === 'detail'}
+            onOpenChange={() => {
+              setOpen('detail')
+              setTimeout(() => setCurrentRow(null), 500)
             }}
-            className='max-w-md'
-            title={`Delete this task: ${currentRow.id} ?`}
-            desc={
-              <>
-                You are about to delete a task with the ID{' '}
-                <strong>{currentRow.id}</strong>. <br />
-                This action cannot be undone.
-              </>
-            }
-            confirmText='Delete'
+            currentRow={currentRow}
           />
         </>
       )}

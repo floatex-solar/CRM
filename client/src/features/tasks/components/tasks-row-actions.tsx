@@ -1,33 +1,24 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { Trash2 } from 'lucide-react'
+import { Eye, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { labels } from '../data/data'
-import { taskSchema } from '../data/schema'
+import { type Task } from '../data/schema'
 import { useTasks } from './tasks-provider'
 
-type DataTableRowActionsProps<TData> = {
-  row: Row<TData>
+type TasksRowActionsProps = {
+  row: Row<Task>
 }
 
-export function DataTableRowActions<TData>({
-  row,
-}: DataTableRowActionsProps<TData>) {
-  const task = taskSchema.parse(row.original)
-
+export function TasksRowActions({ row }: TasksRowActionsProps) {
+  const task = row.original
   const { setOpen, setCurrentRow } = useTasks()
 
   return (
@@ -45,26 +36,25 @@ export function DataTableRowActions<TData>({
         <DropdownMenuItem
           onClick={() => {
             setCurrentRow(task)
-            setOpen('update')
+            setOpen('detail')
+          }}
+        >
+          View Details
+          <DropdownMenuShortcut>
+            <Eye size={16} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            setCurrentRow(task)
+            setOpen('edit')
           }}
         >
           Edit
+          <DropdownMenuShortcut>
+            <Edit size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>Make a copy</DropdownMenuItem>
-        <DropdownMenuItem disabled>Favorite</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={task.label}>
-              {labels.map((label) => (
-                <DropdownMenuRadioItem key={label.value} value={label.value}>
-                  {label.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {

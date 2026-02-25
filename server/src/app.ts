@@ -94,6 +94,9 @@ app.use(
       "leadStatus",
       "priority",
       "search",
+      "status",
+      "assignedTo",
+      "assignedBy",
     ],
   }),
 );
