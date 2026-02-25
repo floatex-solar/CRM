@@ -27,6 +27,14 @@ export function VideoRecorder({ onRecorded }: VideoRecorderProps) {
     return cleanup
   }, [cleanup])
 
+  const handleVideoRef = useCallback((node: HTMLVideoElement) => {
+    videoPreviewRef.current = node
+    if (node && streamRef.current) {
+      node.srcObject = streamRef.current
+      node.play().catch(() => {})
+    }
+  }, [])
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -34,12 +42,6 @@ export function VideoRecorder({ onRecorded }: VideoRecorderProps) {
         audio: true,
       })
       streamRef.current = stream
-
-      // Show live preview
-      if (videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream
-        videoPreviewRef.current.play()
-      }
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'video/webm',
@@ -117,7 +119,7 @@ export function VideoRecorder({ onRecorded }: VideoRecorderProps) {
         <div className='overflow-hidden rounded-lg border'>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
-            ref={videoPreviewRef}
+            ref={handleVideoRef}
             muted
             className='max-h-48 w-full bg-black'
           />

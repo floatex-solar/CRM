@@ -4,6 +4,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { NotificationBell } from '@/features/notifications/notification-bell'
 import { SitesDialogs } from './components/sites-dialogs'
 import { SitesPrimaryButtons } from './components/sites-primary-buttons'
 import { SitesProvider } from './components/sites-provider'
@@ -15,6 +16,7 @@ function SitesContent() {
       <Header fixed>
         <Search />
         <div className='ms-auto flex items-center space-x-4'>
+          <NotificationBell />
           <ThemeSwitch />
           <ConfigDrawer />
           <ProfileDropdown />

@@ -4,6 +4,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { NotificationBell } from '@/features/notifications/notification-bell'
 import { CompaniesDialogs } from './components/companies-dialogs'
 import { CompaniesPrimaryButtons } from './components/companies-primary-buttons'
 import { CompaniesProvider } from './components/companies-provider'
@@ -15,6 +16,7 @@ function CompaniesContent() {
       <Header fixed>
         <Search />
         <div className='ms-auto flex items-center space-x-4'>
+          <NotificationBell />
           <ThemeSwitch />
           <ConfigDrawer />
           <ProfileDropdown />

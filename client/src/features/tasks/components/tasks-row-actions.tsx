@@ -21,6 +21,10 @@ type TasksRowActionsProps = {
 export function TasksRowActions({ row }: TasksRowActionsProps) {
   const task = row.original
   const { setOpen, setCurrentRow } = useTasks()
+  const { user: currentUser } = useAuthStore((state) => state.auth)
+
+  const canModify =
+    currentUser?.role === 'admin' || currentUser?._id === task.assignedBy._id
 
   return (
     <DropdownMenu modal={false}>
@@ -45,29 +49,34 @@ export function TasksRowActions({ row }: TasksRowActionsProps) {
             <Eye size={16} />
           </DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(task)
-            setOpen('edit')
-          }}
-        >
-          Edit
-          <DropdownMenuShortcut>
-            <Edit size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(task)
-            setOpen('delete')
-          }}
-        >
-          Delete
-          <DropdownMenuShortcut>
-            <Trash2 size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
+
+        {canModify && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(task)
+                setOpen('edit')
+              }}
+            >
+              Edit
+              <DropdownMenuShortcut>
+                <Edit size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(task)
+                setOpen('delete')
+              }}
+            >
+              Delete
+              <DropdownMenuShortcut>
+                <Trash2 size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

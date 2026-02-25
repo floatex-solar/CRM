@@ -178,7 +178,7 @@ export function TaskUpdateForm({ taskId, currentStatus }: TaskUpdateFormProps) {
         </div>
 
         {/* Voice & Video */}
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+        <div className='grid grid-cols-1 gap-4'>
           <VoiceRecorder onRecorded={setVoiceBlob} />
           <VideoRecorder onRecorded={setVideoBlob} />
         </div>

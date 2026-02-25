@@ -4,6 +4,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { NotificationBell } from '@/features/notifications/notification-bell'
 import { LeadsDialogs } from './components/leads-dialogs'
 import { LeadsPrimaryButtons } from './components/leads-primary-buttons'
 import { LeadsProvider } from './components/leads-provider'
@@ -15,6 +16,7 @@ function LeadsContent() {
       <Header fixed>
         <Search />
         <div className='ms-auto flex items-center space-x-4'>
+          <NotificationBell />
           <ThemeSwitch />
           <ConfigDrawer />
           <ProfileDropdown />
