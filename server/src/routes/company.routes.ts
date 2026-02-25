@@ -7,6 +7,16 @@ import {
   companyUpdateSchemaZod,
   contactSchemaZod,
 } from "../models/company.model.js";
+import multer from "multer";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+});
+const uploadFields = upload.fields([
+  { name: "ndaFile", maxCount: 1 },
+  { name: "mouFile", maxCount: 1 },
+]);
 
 const router = express.Router();
 
@@ -23,7 +33,7 @@ router.use(authController.protect);
 router
   .route("/")
   .get(companyController.getAllCompanies)
-  .post(validateBody(companySchemaZod), companyController.createCompany);
+  .post(uploadFields, companyController.createCompany);
 
 // Bulk delete (must be above /:id to avoid route conflict)
 router.post("/bulk-delete", companyController.deleteMultipleCompanies);
@@ -31,7 +41,7 @@ router.post("/bulk-delete", companyController.deleteMultipleCompanies);
 router
   .route("/:id")
   .get(companyController.getCompany)
-  .patch(validateBody(companyUpdateSchemaZod), companyController.updateCompany)
+  .patch(uploadFields, companyController.updateCompany)
   .delete(companyController.deleteCompany);
 
 /* =========================================================

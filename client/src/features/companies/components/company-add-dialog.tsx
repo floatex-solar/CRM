@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { CompanyInput } from '../data/schema'
 import { useCreateCompanyMutation } from '../hooks/use-companies-api'
 import { CompanyForm } from './company-add-form'
 
@@ -21,7 +20,7 @@ export function CompanyAddDialog({
 }: CompanyAddDialogProps) {
   const createMutation = useCreateCompanyMutation()
 
-  const onSubmit = async (values: CompanyInput) => {
+  const onSubmit = async (values: FormData) => {
     try {
       await createMutation.mutateAsync(values)
       toast.success('Company created successfully.')

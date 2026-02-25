@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { Company, CompanyInput } from '../data/schema'
+import type { Company } from '../data/schema'
 import { useUpdateCompanyMutation } from '../hooks/use-companies-api'
 import { CompanyForm } from './company-add-form'
 
@@ -23,7 +23,7 @@ export function CompanyEditDialog({
 }: CompanyEditDialogProps) {
   const updateMutation = useUpdateCompanyMutation()
 
-  const onSubmit = async (values: CompanyInput) => {
+  const onSubmit = async (values: FormData) => {
     try {
       await updateMutation.mutateAsync({ id: currentRow._id, input: values })
       toast.success('Company updated successfully.')

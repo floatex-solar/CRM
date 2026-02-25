@@ -1,3 +1,5 @@
+import { Navigate } from '@tanstack/react-router'
+import { useAuthStore } from '@/stores/auth-store'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -11,6 +13,12 @@ import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
 
 function UsersContent() {
+  const { user } = useAuthStore((state) => state.auth)
+
+  if (user?.role !== 'admin') {
+    return <Navigate to='/' replace />
+  }
+
   return (
     <UsersProvider>
       <Header fixed>

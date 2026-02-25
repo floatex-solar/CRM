@@ -6,11 +6,7 @@ import {
   type QueryOptions,
 } from '@tanstack/react-query'
 import api from '@/lib/axios'
-import type {
-  Company,
-  CompanyInput,
-  CompaniesListResponse,
-} from '../data/schema'
+import type { Company, CompaniesListResponse } from '../data/schema'
 
 const COMPANIES_KEY = ['companies'] as const
 
@@ -84,11 +80,13 @@ export function useCompaniesQuery(search: CompaniesSearch) {
 export function useCreateCompanyMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: CompanyInput) => {
+    mutationFn: async (input: FormData) => {
       const { data } = await api.post<{
         status: string
         data: { company: Company }
-      }>('/companies', input)
+      }>('/companies', input, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       return data.data.company
     },
     onSuccess: () => {
@@ -100,17 +98,13 @@ export function useCreateCompanyMutation() {
 export function useUpdateCompanyMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({
-      id,
-      input,
-    }: {
-      id: string
-      input: Partial<CompanyInput>
-    }) => {
+    mutationFn: async ({ id, input }: { id: string; input: FormData }) => {
       const { data } = await api.patch<{
         status: string
         data: { company: Company }
-      }>(`/companies/${id}`, input)
+      }>(`/companies/${id}`, input, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       return data.data.company
     },
     onSuccess: () => {

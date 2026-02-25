@@ -79,10 +79,12 @@ const baseCompanySchemaZod = z.object({
   ndaStatus: z.string().optional(),
   ndaSignedDate: optionalDate,
   ndaExpiryDate: optionalDate,
+  ndaFileUrl: z.string().optional(),
 
   mouStatus: z.string().optional(),
   mouSignedDate: optionalDate,
   mouExpiryDate: optionalDate,
+  mouFileUrl: z.string().optional(),
 
   emailSent: z.string().optional(),
   emailSentDate: optionalDate,
@@ -232,10 +234,12 @@ const CompanySchema = new Schema<ICompanyDocument>(
     ndaStatus: String,
     ndaSignedDate: Date,
     ndaExpiryDate: Date,
+    ndaFileUrl: String,
 
     mouStatus: String,
     mouSignedDate: Date,
     mouExpiryDate: Date,
+    mouFileUrl: String,
 
     emailSent: { type: String, default: "No" },
     emailSentDate: Date,

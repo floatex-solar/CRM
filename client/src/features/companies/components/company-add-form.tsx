@@ -42,7 +42,7 @@ const getStatesOfCountry = State.getStatesOfCountry
 
 interface CompanyFormProps {
   initialData?: Company | null
-  onSubmit: (data: CompanyInput) => Promise<void>
+  onSubmit: (data: FormData) => Promise<void>
   isPending?: boolean
 }
 
@@ -167,7 +167,21 @@ export function CompanyForm({
   }, [watchedCountry, form])
 
   const handleFormSubmit: SubmitHandler<CompanyInput> = async (values) => {
-    await onSubmit(values)
+    const formData = new FormData()
+
+    Object.entries(values).forEach(([key, value]) => {
+      if (key === 'address' || key === 'contacts' || key === 'notes') {
+        formData.append(key, JSON.stringify(value))
+      } else if (key === 'ndaFile' || key === 'mouFile') {
+        if (value && value.length > 0) {
+          formData.append(key, value[0])
+        }
+      } else if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, String(value))
+      }
+    })
+
+    await onSubmit(formData)
   }
 
   return (
@@ -689,10 +703,22 @@ export function CompanyForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input
-                          type='file'
-                          onChange={(e) => field.onChange(e.target.files)}
-                        />
+                        <div>
+                          <Input
+                            type='file'
+                            onChange={(e) => field.onChange(e.target.files)}
+                          />
+                          {initialData?.ndaFileUrl && (
+                            <a
+                              href={initialData.ndaFileUrl}
+                              target='_blank'
+                              rel='noreferrer'
+                              className='mt-1 inline-block text-xs text-blue-500 hover:underline'
+                            >
+                              View Current Document
+                            </a>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -757,10 +783,22 @@ export function CompanyForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input
-                          type='file'
-                          onChange={(e) => field.onChange(e.target.files)}
-                        />
+                        <div>
+                          <Input
+                            type='file'
+                            onChange={(e) => field.onChange(e.target.files)}
+                          />
+                          {initialData?.mouFileUrl && (
+                            <a
+                              href={initialData.mouFileUrl}
+                              target='_blank'
+                              rel='noreferrer'
+                              className='mt-1 inline-block text-xs text-blue-500 hover:underline'
+                            >
+                              View Current Document
+                            </a>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

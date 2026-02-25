@@ -78,10 +78,12 @@ export interface ICompany {
   ndaStatus?: string;
   ndaSignedDate?: Date;
   ndaExpiryDate?: Date;
+  ndaFileUrl?: string;
 
   mouStatus?: string;
   mouSignedDate?: Date;
   mouExpiryDate?: Date;
+  mouFileUrl?: string;
 
   emailSent?: string;
   emailSentDate?: Date;

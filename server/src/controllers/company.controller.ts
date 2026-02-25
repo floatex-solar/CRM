@@ -3,6 +3,17 @@ import { CompanyModel } from "../models/company.model.js";
 import catchAsync from "../utils/catchAsync.js";
 import { AppError } from "../utils/appError.js";
 import APIFeatures from "../utils/apiFeatures.js";
+import { uploadFileToDrive } from "../services/upload-to-drive.js";
+
+function parseJsonField(body: any, field: string) {
+  if (typeof body[field] === "string") {
+    try {
+      body[field] = JSON.parse(body[field]);
+    } catch {
+      body[field] = undefined;
+    }
+  }
+}
 
 /* =========================================================
    COMPANY CRUD
@@ -12,6 +23,27 @@ import APIFeatures from "../utils/apiFeatures.js";
 // Create Company
 // ─────────────────────────────────────────
 export const createCompany = catchAsync(async (req: Request, res: Response) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  if (files?.ndaFile?.[0]) {
+    req.body.ndaFileUrl = await uploadFileToDrive({
+      fileBuffer: files.ndaFile[0].buffer,
+      fileName: files.ndaFile[0].originalname,
+      mimeType: files.ndaFile[0].mimetype,
+    });
+  }
+  if (files?.mouFile?.[0]) {
+    req.body.mouFileUrl = await uploadFileToDrive({
+      fileBuffer: files.mouFile[0].buffer,
+      fileName: files.mouFile[0].originalname,
+      mimeType: files.mouFile[0].mimetype,
+    });
+  }
+
+  parseJsonField(req.body, "address");
+  parseJsonField(req.body, "contacts");
+  parseJsonField(req.body, "notes");
+
   const company = await CompanyModel.create(req.body);
 
   res.status(201).json({
@@ -117,6 +149,27 @@ export const getAllCompanies = catchAsync(
 // ─────────────────────────────────────────
 export const updateCompany = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    if (files?.ndaFile?.[0]) {
+      req.body.ndaFileUrl = await uploadFileToDrive({
+        fileBuffer: files.ndaFile[0].buffer,
+        fileName: files.ndaFile[0].originalname,
+        mimeType: files.ndaFile[0].mimetype,
+      });
+    }
+    if (files?.mouFile?.[0]) {
+      req.body.mouFileUrl = await uploadFileToDrive({
+        fileBuffer: files.mouFile[0].buffer,
+        fileName: files.mouFile[0].originalname,
+        mimeType: files.mouFile[0].mimetype,
+      });
+    }
+
+    parseJsonField(req.body, "address");
+    parseJsonField(req.body, "contacts");
+    parseJsonField(req.body, "notes");
+
     const company = await CompanyModel.findByIdAndUpdate(
       req.params.id,
       req.body,
