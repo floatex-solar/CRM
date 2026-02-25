@@ -35,7 +35,7 @@ interface LoginResponse {
   message?: string
 }
 
-export function useLogin(redirectTo?: string) {
+export function useLogin() {
   const navigate = useNavigate()
   const {
     auth: { setUser, setAccessToken },

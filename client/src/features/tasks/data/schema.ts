@@ -79,11 +79,6 @@ export type Task = z.infer<typeof taskSchema>
    Task Input (for create / edit forms)
 ====================================================== */
 
-const optionalDateString = z.preprocess(
-  (v) => (v === '' ? undefined : v),
-  z.string().optional()
-)
-
 export const taskInputSchema = z.object({
   lead: z.string().optional(),
   title: z.string().min(1, 'Task title is required.'),

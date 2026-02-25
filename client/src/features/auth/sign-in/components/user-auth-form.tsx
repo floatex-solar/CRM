@@ -26,16 +26,11 @@ const formSchema = z.object({
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
-  redirectTo?: string
   className?: string
 }
 
-export function UserAuthForm({
-  className,
-  redirectTo,
-  ...props
-}: UserAuthFormProps) {
-  const { mutate: login, isPending: isLoading } = useLogin(redirectTo)
+export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+  const { mutate: login, isPending: isLoading } = useLogin()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

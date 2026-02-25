@@ -8,6 +8,7 @@ import {
   Building2,
   Target,
   MapPin,
+  ListTodo,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -43,11 +44,11 @@ export const sidebarData: Omit<SidebarData, 'user'> = {
           url: '/sites',
           icon: MapPin,
         },
-        // {
-        //   title: 'Tasks',
-        //   url: '/tasks',
-        //   icon: ListTodo,
-        // },
+        {
+          title: 'Tasks',
+          url: '/tasks',
+          icon: ListTodo,
+        },
         // {
         //   title: 'Apps',
         //   url: '/apps',
