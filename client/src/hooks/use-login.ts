@@ -72,7 +72,8 @@ export function useLogin(redirectTo?: string) {
         description: `Welcome back, ${user.name || user.email}!`,
       })
 
-      const target = redirectTo || '/companies'
+      // const target = redirectTo || '/companies'
+      const target = '/companies'
       navigate({ to: target, replace: true })
     },
 
