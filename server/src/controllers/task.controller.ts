@@ -4,8 +4,10 @@ import { NotificationModel } from "../models/notification.model.js";
 import catchAsync from "../utils/catchAsync.js";
 import { AppError } from "../utils/appError.js";
 import { uploadFileToDrive } from "../services/upload-to-drive.js";
+import { sendTaskAssignmentEmail } from "../utils/email.js";
 import type { IAttachment } from "../types/task.types.js";
 import type { UserDocument } from "../models/user.model.js";
+import User from "../models/user.model.js";
 
 /* =========================================================
    Helpers
@@ -119,6 +121,17 @@ export const createTask = catchAsync(async (req: Request, res: Response) => {
 
   if (assignedToId !== assignedById) {
     notifyRecipients.push(assignedToId);
+
+    // Fetch assignee to send email
+    const assignee = await User.findById(assignedToId).select("name email");
+    if (assignee?.email) {
+      await sendTaskAssignmentEmail({
+        to: assignee.email,
+        assigneeName: assignee.name,
+        taskTitle: task.title,
+        taskId: String(task._id),
+      }).catch((err) => console.error("Failed to send task email:", err));
+    }
   }
 
   // Notify watchers

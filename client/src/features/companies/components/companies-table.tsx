@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { Trash2, AlertTriangle } from 'lucide-react'
+import { Trash2, AlertTriangle, FileCheck, ExternalLink } from 'lucide-react'
 import { Mail, Phone, User as UserIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -44,6 +44,24 @@ import {
 import { companiesColumns as columns } from './companies-columns'
 
 const route = getRouteApi('/_authenticated/companies/')
+
+/** Renders a file link for the expanded row when a file exists. */
+function FileLink({ label, url }: { label: string; url?: string }) {
+  if (!url) return null
+
+  return (
+    <a
+      href={url}
+      target='_blank'
+      rel='noopener noreferrer'
+      onClick={(e) => e.stopPropagation()}
+      className='flex items-center gap-1.5 text-xs text-primary hover:underline'
+    >
+      <ExternalLink className='h-3 w-3' />
+      {label}
+    </a>
+  )
+}
 
 export function CompaniesTable() {
   const search = route.useSearch()
@@ -287,6 +305,28 @@ export function CompaniesTable() {
                               </div>
                             )}
                           </div>
+
+                          {(row.original.ndaFileUrl ||
+                            row.original.mouFileUrl) && (
+                            <div className='mt-6'>
+                              <div className='mb-4 flex items-center gap-2'>
+                                <FileCheck className='h-4 w-4 text-primary' />
+                                <h4 className='text-sm font-semibold tracking-wider text-muted-foreground uppercase'>
+                                  Agreements & Documents
+                                </h4>
+                              </div>
+                              <div className='flex items-center gap-6'>
+                                <FileLink
+                                  label='View NDA Document'
+                                  url={row.original.ndaFileUrl}
+                                />
+                                <FileLink
+                                  label='View MOU Document'
+                                  url={row.original.mouFileUrl}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
