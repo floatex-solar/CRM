@@ -115,6 +115,22 @@ export const getAllCompanies = catchAsync(
         ? { $in: req.query.priority }
         : req.query.priority;
     }
+    if (req.query.ndaStatus) {
+      baseFilter.ndaStatus = Array.isArray(req.query.ndaStatus)
+        ? { $in: req.query.ndaStatus }
+        : req.query.ndaStatus;
+    }
+    if (req.query.mouStatus) {
+      baseFilter.mouStatus = Array.isArray(req.query.mouStatus)
+        ? { $in: req.query.mouStatus }
+        : req.query.mouStatus;
+    }
+    if (req.query.emailSent) {
+      baseFilter.emailSent = req.query.emailSent;
+    }
+    if (req.query.leadSource) {
+      baseFilter.leadSource = req.query.leadSource;
+    }
 
     // Count total matching documents (before pagination)
     const totalCount = await CompanyModel.countDocuments(baseFilter);

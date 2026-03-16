@@ -7,6 +7,11 @@ const siteSearchSchema = z.object({
   page: z.number().optional().catch(1),
   pageSize: z.number().optional().catch(10),
   filter: z.string().optional().catch(''),
+  possibilityForPondGettingEmpty: z.string().optional().catch(''),
+  bathymetryAvailable: z.string().optional().catch(''),
+  dprAvailable: z.string().optional().catch(''),
+  geotechnicalReportAvailable: z.string().optional().catch(''),
+  pfrAvailable: z.string().optional().catch(''),
 })
 
 export const Route = createFileRoute('/_authenticated/sites/')({
@@ -18,6 +23,13 @@ export const Route = createFileRoute('/_authenticated/sites/')({
       page: search.page,
       pageSize: search.pageSize,
       filter: search.filter || undefined,
+      possibilityForPondGettingEmpty:
+        search.possibilityForPondGettingEmpty || undefined,
+      bathymetryAvailable: search.bathymetryAvailable || undefined,
+      dprAvailable: search.dprAvailable || undefined,
+      geotechnicalReportAvailable:
+        search.geotechnicalReportAvailable || undefined,
+      pfrAvailable: search.pfrAvailable || undefined,
     })
     return context.queryClient.ensureQueryData({
       ...opts,

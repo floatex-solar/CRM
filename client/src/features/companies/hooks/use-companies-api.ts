@@ -15,6 +15,10 @@ type CompaniesSearch = {
   pageSize?: number
   leadStatus?: string[]
   priority?: string[]
+  ndaStatus?: string[]
+  mouStatus?: string[]
+  emailSent?: string
+  leadSource?: string
   filter?: string
 }
 
@@ -37,6 +41,12 @@ function buildCompaniesParams(search: CompaniesSearch) {
     search.leadStatus.forEach((s) => params.append('leadStatus', s))
   if (search.priority?.length)
     search.priority.forEach((p) => params.append('priority', p))
+  if (search.ndaStatus?.length)
+    search.ndaStatus.forEach((s) => params.append('ndaStatus', s))
+  if (search.mouStatus?.length)
+    search.mouStatus.forEach((s) => params.append('mouStatus', s))
+  if (search.emailSent) params.set('emailSent', search.emailSent)
+  if (search.leadSource) params.set('leadSource', search.leadSource)
   return params.toString()
 }
 

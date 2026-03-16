@@ -111,6 +111,24 @@ export const getAllSites = catchAsync(async (req: Request, res: Response) => {
   if (req.query.country) {
     baseFilter.country = req.query.country;
   }
+  if (req.query.possibilityForPondGettingEmpty) {
+    baseFilter.possibilityForPondGettingEmpty =
+      req.query.possibilityForPondGettingEmpty === "true";
+  }
+  if (req.query.bathymetryAvailable) {
+    baseFilter.bathymetryAvailable =
+      req.query.bathymetryAvailable === "true";
+  }
+  if (req.query.dprAvailable) {
+    baseFilter.dprAvailable = req.query.dprAvailable === "true";
+  }
+  if (req.query.geotechnicalReportAvailable) {
+    baseFilter.geotechnicalReportAvailable =
+      req.query.geotechnicalReportAvailable === "true";
+  }
+  if (req.query.pfrAvailable) {
+    baseFilter.pfrAvailable = req.query.pfrAvailable === "true";
+  }
 
   const totalCount = await SiteModel.countDocuments(baseFilter);
 

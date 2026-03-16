@@ -20,6 +20,11 @@ type SitesSearch = {
   filter?: string
   owner?: string
   country?: string
+  possibilityForPondGettingEmpty?: string
+  bathymetryAvailable?: string
+  dprAvailable?: string
+  geotechnicalReportAvailable?: string
+  pfrAvailable?: string
 }
 
 type SitesQueryKey = readonly [(typeof SITES_KEY)[number], SitesSearch]
@@ -36,6 +41,20 @@ function buildSitesParams(search: SitesSearch) {
   if (search.filter) params.set('search', search.filter)
   if (search.owner) params.set('owner', search.owner)
   if (search.country) params.set('country', search.country)
+  if (search.possibilityForPondGettingEmpty)
+    params.set(
+      'possibilityForPondGettingEmpty',
+      search.possibilityForPondGettingEmpty
+    )
+  if (search.bathymetryAvailable)
+    params.set('bathymetryAvailable', search.bathymetryAvailable)
+  if (search.dprAvailable) params.set('dprAvailable', search.dprAvailable)
+  if (search.geotechnicalReportAvailable)
+    params.set(
+      'geotechnicalReportAvailable',
+      search.geotechnicalReportAvailable
+    )
+  if (search.pfrAvailable) params.set('pfrAvailable', search.pfrAvailable)
   return params.toString()
 }
 
