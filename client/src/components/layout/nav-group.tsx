@@ -32,15 +32,22 @@ import {
   type NavLink,
   type NavGroup as NavGroupProps,
 } from './types'
+import { useAuthStore } from '@/stores/auth-store'
 
 export function NavGroup({ title, items }: NavGroupProps) {
   const { state, isMobile } = useSidebar()
   const href = useLocation({ select: (location) => location.href })
+  const userRole = useAuthStore((s) => s.auth.user?.role)
+
+  const visibleItems = items.filter(
+    (item) => !item.roles || item.roles.includes(userRole ?? '')
+  )
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const key = `${item.title}-${item.url}`
 
           if (!item.items)

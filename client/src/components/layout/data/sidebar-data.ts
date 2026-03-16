@@ -65,6 +65,7 @@ export const sidebarData: Omit<SidebarData, 'user'> = {
           title: 'Users',
           url: '/users',
           icon: Users,
+          roles: ['admin'],
         },
         // {
         //   title: 'Secured by Clerk',
