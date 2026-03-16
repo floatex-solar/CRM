@@ -5,6 +5,7 @@ import {
   Palette,
   HelpCircle,
   Command,
+  LayoutDashboard,
   Building2,
   Target,
   MapPin,
@@ -24,11 +25,11 @@ export const sidebarData: Omit<SidebarData, 'user'> = {
     {
       title: 'General',
       items: [
-        // {
-        //   title: 'Dashboard',
-        //   url: '/',
-        //   icon: LayoutDashboard,
-        // },
+        {
+          title: 'Dashboard',
+          url: '/',
+          icon: LayoutDashboard,
+        },
         {
           title: 'Companies',
           url: '/companies',

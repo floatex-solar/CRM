@@ -1,3 +1,6 @@
+import { useMemo, useState } from 'react'
+import { format } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { TopNav } from '@/components/layout/top-nav'
@@ -13,8 +16,33 @@ import { LeadsSection } from './components/leads-section'
 import { CompaniesSection } from './components/companies-section'
 import { DashboardSkeleton } from './components/dashboard-skeleton'
 
+function formatDate(date: Date | undefined): string | undefined {
+  return date ? format(date, 'yyyy-MM-dd') : undefined
+}
+
 export function Dashboard() {
-  const { data, isLoading } = useDashboardStatsQuery()
+  const [tasksDateRange, setTasksDateRange] = useState<DateRange | undefined>()
+  const [sitesDateRange, setSitesDateRange] = useState<DateRange | undefined>()
+  const [leadsDateRange, setLeadsDateRange] = useState<DateRange | undefined>()
+  const [companiesDateRange, setCompaniesDateRange] = useState<
+    DateRange | undefined
+  >()
+
+  const queryParams = useMemo(
+    () => ({
+      tasksFrom: formatDate(tasksDateRange?.from),
+      tasksTo: formatDate(tasksDateRange?.to),
+      sitesFrom: formatDate(sitesDateRange?.from),
+      sitesTo: formatDate(sitesDateRange?.to),
+      leadsFrom: formatDate(leadsDateRange?.from),
+      leadsTo: formatDate(leadsDateRange?.to),
+      companiesFrom: formatDate(companiesDateRange?.from),
+      companiesTo: formatDate(companiesDateRange?.to),
+    }),
+    [tasksDateRange, sitesDateRange, leadsDateRange, companiesDateRange]
+  )
+
+  const { data, isLoading } = useDashboardStatsQuery(queryParams)
 
   return (
     <>
@@ -29,7 +57,7 @@ export function Dashboard() {
       </Header>
 
       <Main>
-        <div className='mb-4'>
+        <div className='mb-6'>
           <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
           <p className='text-muted-foreground'>
             Overview of your CRM application
@@ -39,12 +67,28 @@ export function Dashboard() {
         {isLoading || !data ? (
           <DashboardSkeleton />
         ) : (
-          <div className='space-y-8'>
+          <div className='space-y-6'>
             <SummarySection stats={data} />
-            <TasksSection stats={data.tasks} />
-            <SitesSection stats={data.sites} />
-            <LeadsSection stats={data.leads} />
-            <CompaniesSection stats={data.companies} />
+            <TasksSection
+              stats={data.tasks}
+              dateRange={tasksDateRange}
+              onDateRangeChange={setTasksDateRange}
+            />
+            <SitesSection
+              stats={data.sites}
+              dateRange={sitesDateRange}
+              onDateRangeChange={setSitesDateRange}
+            />
+            <LeadsSection
+              stats={data.leads}
+              dateRange={leadsDateRange}
+              onDateRangeChange={setLeadsDateRange}
+            />
+            <CompaniesSection
+              stats={data.companies}
+              dateRange={companiesDateRange}
+              onDateRangeChange={setCompaniesDateRange}
+            />
           </div>
         )}
       </Main>
