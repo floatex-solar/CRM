@@ -42,7 +42,7 @@ if (NODE_ENV === "development") {
 // 3. Rate limiting (especially on API routes)
 const apiLimiter = rateLimit({
   max: 100, // max 100 requests
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 1000, // 1 min
   message: { error: "Too many requests from this IP, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,

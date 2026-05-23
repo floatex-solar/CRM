@@ -34,7 +34,7 @@ function RouteComponent() {
       <Outlet />
     </ClerkProvider>
   )
-}
+} 
 
 function MissingClerkPubKey() {
   const codeBlock =
