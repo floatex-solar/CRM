@@ -16,21 +16,21 @@ export const siteInputSchema = z.object({
   owner: z.string().min(1, 'Owner is required.'), // Company ID
   country: z.string().min(1, 'Country is required.'),
 
-  locationLat: z.coerce.number().min(-90).max(90),
-  locationLng: z.coerce.number().min(-180).max(180),
+  locationLat: z.coerce.number(),
+  locationLng: z.coerce.number(),
 
   typeOfWaterBody: z.string().min(1, 'Type of water body is required.'),
   useOfWater: z.string().min(1, 'Use of water is required.'),
   waterArea: z.coerce.number().min(0, 'Water area must be positive.'),
   windSpeed: z.coerce.number().min(0, 'Wind speed must be positive.'),
 
-  maxWaterLevel: z.string().min(1, 'Max water level is required.'),
-  minDrawDownLevel: z.string().min(1, 'Min draw down level is required.'),
-  fullReservoirLevel: z.string().min(1, 'Full reservoir level is required.'),
+  maxWaterLevel: z.string().optional().default(''),
+  minDrawDownLevel: z.string().optional().default(''),
+  fullReservoirLevel: z.string().optional().default(''),
   waterLevelVariation: z.string().optional().default(''),
   fetchOfReservoir: z.string().optional().default(''),
-  waveHeight: z.string().min(1, 'Wave height is required.'),
-  waterCurrent: z.string().min(1, 'Water current is required.'),
+  waveHeight: z.string().optional().default(''),
+  waterCurrent: z.string().optional().default(''),
 
   // Boolean flags
   bathymetryAvailable: z.boolean().default(false),

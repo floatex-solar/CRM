@@ -28,13 +28,13 @@ export const siteSchemaZod = z.object({
   waterArea: z.coerce.number().min(0, "Water area must be positive"),
   windSpeed: z.coerce.number().min(0, "Wind speed must be positive"),
 
-  maxWaterLevel: z.string().min(1, "Max water level is required"),
-  minDrawDownLevel: z.string().min(1, "Min draw down level is required"),
-  fullReservoirLevel: z.string().min(1, "Full reservoir level is required"),
+  maxWaterLevel: z.string().optional().default(""),
+  minDrawDownLevel: z.string().optional().default(""),
+  fullReservoirLevel: z.string().optional().default(""),
   waterLevelVariation: z.string().optional().default(""),
   fetchOfReservoir: z.string().optional().default(""),
-  waveHeight: z.string().min(1, "Wave height is required"),
-  waterCurrent: z.string().min(1, "Water current is required"),
+  waveHeight: z.string().optional().default(""),
+  waterCurrent: z.string().optional().default(""),
 
   bathymetryAvailable: z.coerce.boolean(),
   // Files are handled separately via Multer, but we can validate structure if passed json
@@ -82,13 +82,13 @@ const SiteSchema = new Schema<ISite>(
     waterArea: { type: Number, required: true },
     windSpeed: { type: Number, required: true },
 
-    maxWaterLevel: { type: String, required: true },
-    minDrawDownLevel: { type: String, required: true },
-    fullReservoirLevel: { type: String, required: true },
+    maxWaterLevel: { type: String, default: "" },
+    minDrawDownLevel: { type: String, default: "" },
+    fullReservoirLevel: { type: String, default: "" },
     waterLevelVariation: { type: String, default: "" },
     fetchOfReservoir: { type: String, default: "" },
-    waveHeight: { type: String, required: true },
-    waterCurrent: { type: String, required: true },
+    waveHeight: { type: String, default: "" },
+    waterCurrent: { type: String, default: "" },
 
     bathymetryAvailable: { type: Boolean, default: false },
     bathymetryFile: { type: reportFileSchema },
