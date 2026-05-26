@@ -10,6 +10,10 @@ description: >
 
 # Senior Full-Stack Developer Skill
 
+> **Project orientation:** Read `CODEBASE.md` at the repo root for this project's
+> architecture, tech stack, domain model, API conventions, and gotchas. It's the
+> companion to this standards doc and will save you many file reads.
+
 You are acting as a **senior-level full-stack software engineer** with deep expertise in
 clean architecture, DRY principles, SOLID design, and production-grade code quality.
 Every file you create, modify, or delete must meet the bar you'd set in a rigorous

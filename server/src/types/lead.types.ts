@@ -64,11 +64,11 @@ export interface ILead {
   projectName: string;
   projectLocation: string;
 
-  client: Types.ObjectId;
+  client?: Types.ObjectId;
   capacity: string;
-  developer: Types.ObjectId;
-  consultant: Types.ObjectId;
-  endCustomer: Types.ObjectId;
+  developer?: Types.ObjectId;
+  consultant?: Types.ObjectId;
+  endCustomer?: Types.ObjectId;
   country: string;
 
   designConfigurations: IDesignConfiguration[];

@@ -81,11 +81,11 @@ export const leadInputSchema = z.object({
   projectName: z.string().min(1, 'Project name is required.'),
   projectLocation: z.string().min(1, 'Project location is required.'),
 
-  client: z.string().min(1, 'Client is required.'),
+  client: z.string().optional().or(z.literal('')),
   capacity: z.string().min(1, 'Capacity is required.'),
-  developer: z.string().min(1, 'Developer is required.'),
-  consultant: z.string().min(1, 'Consultant is required.'),
-  endCustomer: z.string().min(1, 'End customer is required.'),
+  developer: z.string().optional().or(z.literal('')),
+  consultant: z.string().optional().or(z.literal('')),
+  endCustomer: z.string().optional().or(z.literal('')),
   country: z.string().min(1, 'Country is required.'),
 
   designConfigurations: z.array(designConfigurationSchema).default([]),
